@@ -206,7 +206,9 @@
     async function autenticar() {
         const e = document.getElementById('uEmail').value;
         const s = document.getElementById('uSenha').value;
-        if (e === EMAIL_ADMIN) { trocarTela('pMaster'); carregarMaster(); return; }
+        // CORREÇÃO: Entra no Master apenas se o e-mail E a senha "123" estiverem corretos
+        if (e === EMAIL_ADMIN && s === "123") { trocarTela('pMaster'); carregarMaster(); return; }
+        
         const { data } = await sb.from('perfil_barbeiro').select('*').eq('email', e).eq('senha', s).maybeSingle();
         if (data) {
             if (data.status_pagamento !== 'Ativo') { alert("BLOQUEADO!"); return; }
@@ -214,7 +216,7 @@
             document.getElementById('nomeDaBarbeariaExibicao').innerText = data.nome_salao.toUpperCase();
             document.getElementById('meuLink').innerText = window.location.origin + window.location.pathname + "?id=" + data.id;
             trocarTela('pBarbeiro'); carregarServicos(); carregarAgendamentos();
-        } else { alert("Erro."); }
+        } else { alert("Erro de autenticação."); }
     }
 
     async function registrarBarbeiro() {
