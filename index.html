@@ -116,12 +116,16 @@
     </div>
 
 <script>
-    const URL_SB = "https://rerucptoxbsenfrosjgq.supabase.co";
-    const KEY_SB = "sb_publishable_MuD-oV8aykpJgdroIQjEzw_Kkib_4YW";
+    
+    const _0x5a1 = "aHR0cHM6Ly9yZXJ1Y3B0b3hic2VuZnJvc2pncS5zdXBhYmFzZS5jbw==";
+    const _0x5a2 = "c2JfcHVibGlzaGFibGVfTXVELW9WOGF5a3BKZ2Ryb0lRakV6d19La2liXzRZVw==";
+    const _0x5a3 = "ZWRpZ2l0YWw2MzJAZ21haWwuY29t";
+
+    const URL_SB = atob(_0x5a1);
+    const KEY_SB = atob(_0x5a2);
     const sb = window.supabase.createClient(URL_SB, KEY_SB);
     
     let logado_id = null;
-    const EMAIL_ADMIN = "edigital632@gmail.com";
     const barbeiro_alvo_id = new URLSearchParams(window.location.search).get('id');
 
     window.onload = async () => {
@@ -139,7 +143,6 @@
         }
     };
 
-    // FUNÇÃO CORRIGIDA PARA O AGENDAMENTO FUNCIONAR
     async function confirmarAgendamento() {
         const n = document.getElementById('cNome').value;
         const d = document.getElementById('dataHoraAgendamento').value;
@@ -181,7 +184,7 @@
         if (!e || !s) { alert("Preencha e-mail e senha."); return; }
         const { data } = await sb.from('perfil_barbeiro').select('*').eq('email', e).eq('senha', s).maybeSingle();
         if (data) {
-            if (data.email === EMAIL_ADMIN) { trocarTela('pMaster'); carregarMaster(); return; }
+            if (data.email === atob(_0x5a3)) { trocarTela('pMaster'); carregarMaster(); return; }
             if (data.status_pagamento !== 'Ativo') { alert("ACESSO BLOQUEADO por falta de pagamento! Para continuar acessando a plataforma, regularize seu plano."); return; }
             logado_id = data.id;
             document.getElementById('nomeDaBarbeariaExibicao').innerText = data.nome_salao.toUpperCase();
@@ -243,7 +246,7 @@
     }
 
     async function carregarMaster() {
-        const { data } = await sb.from('perfil_barbeiro').select('*').neq('email', EMAIL_ADMIN);
+        const { data } = await sb.from('perfil_barbeiro').select('*').neq('email', atob(_0x5a3));
         const agora = new Date();
         if(data) {
             document.getElementById('listaBarbeirosMaster').innerHTML = data.map(b => {
