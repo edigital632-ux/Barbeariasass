@@ -3,266 +3,91 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BarberSaaS Pro - Sistema para Barbearias</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <title>BarberSaaS Pro - Painel Master</title>
     <style>
-        :root { --gold: #d4af37; --dark: #0a0a0a; --card: #161616; --red: #ff4d4d; --green: #2ecc71; --white: #eeeeee; }
-        body { background-color: var(--dark); color: var(--white); font-family: sans-serif; margin: 0; padding: 0; }
-        #pLanding { text-align: center; padding: 40px 20px; background: linear-gradient(180deg, #1a1a1a 0%, #0a0a0a 100%); }
-        .hero-title { color: var(--gold); font-size: 32px; text-transform: uppercase; margin-bottom: 10px; }
-        .hero-sub { font-size: 18px; color: #ccc; margin-bottom: 30px; line-height: 1.5; }
-        .features { text-align: left; max-width: 500px; margin: 0 auto 30px auto; }
-        .feature-item { display: flex; align-items: center; margin-bottom: 15px; font-size: 16px; }
-        .feature-item span { color: var(--gold); margin-right: 10px; font-size: 20px; }
-        .promo-box { background: rgba(212, 175, 55, 0.1); border: 1px solid var(--gold); padding: 20px; border-radius: 12px; margin-bottom: 30px; }
-        .page { display: none; padding: 20px; min-height: 100vh; box-sizing: border-box; }
-        .active { display: block !important; }
-        .card { background: var(--card); padding: 15px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #333; position: relative; }
-        input, select { width: 100%; padding: 15px; margin: 10px 0; background: #222; border: 1px solid #444; color: white; border-radius: 8px; box-sizing: border-box; font-size: 18px; }
-        .btn { width: 100%; padding: 18px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; text-transform: uppercase; margin-top: 10px; font-size: 16px; }
-        .btn-gold { background: var(--gold); color: black; }
-        .btn-red { background: var(--red); color: white; }
-        .btn-green { background: var(--green); color: white; }
-        code { display: block; background: #000; padding: 10px; border-radius: 5px; color: var(--gold); font-size: 11px; word-break: break-all; margin-top: 10px; border: 1px dashed var(--gold); }
-        .btn-del { background: none; border: none; color: #ff4d4d; cursor: pointer; font-size: 20px; position: absolute; top: 10px; right: 10px; }
-        .multi-select { background: #222; padding: 10px; border-radius: 8px; border: 1px solid #444; margin: 10px 0; }
-        .item-servico { display: flex; align-items: center; margin-bottom: 12px; font-size: 18px; border-bottom: 1px solid #333; padding: 10px 0; }
-        .item-servico input { width: auto; margin-right: 20px; transform: scale(1.8); }
-        .total-box { font-size: 22px; font-weight: bold; color: var(--green); text-align: right; margin: 10px 0; }
-        .agendamento-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 5px; }
-        .cliente-info { flex: 1; word-break: break-word; font-size: 16px; }
-        .btn-check-clear { background: var(--green); border: none; color: white; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: bold; white-space: nowrap; }
-        .legenda { font-size: 13px; color: #888; margin-bottom: 10px; font-style: italic; }
+        body { font-family: 'Segoe UI', sans-serif; background: #000; color: #fff; padding: 20px; text-align: center; margin: 0; }
+        .container { max-width: 400px; margin: 50px auto; padding: 20px; }
+        .titulo { color: #f1c40f; font-size: 32px; font-weight: bold; margin: 10px 0; display: block; }
+        input { 
+            width: 100%; padding: 15px; margin: 10px 0; border-radius: 8px; 
+            border: 1px solid #333; background: #111; color: white; box-sizing: border-box;
+        }
+        button { 
+            width: 100%; padding: 15px; background: #f1c40f; border: none; 
+            border-radius: 8px; color: #000; font-weight: bold; cursor: pointer; font-size: 16px;
+        }
+        #status-msg { margin-top: 20px; font-size: 14px; color: #ff4d4d; min-height: 20px; }
     </style>
 </head>
 <body>
 
-    <div id="pLanding" class="page active">
-        <h1 class="hero-title">BarberSaaS Pro</h1>
-        <p class="hero-sub">O sistema de agendamento que coloca seu salão em outro nível.</p>
-        <div class="features">
-            <div class="feature-item"><span>✔</span> Link exclusivo para seus clientes</div>
-            <div class="feature-item"><span>✔</span> Gestão total de serviços e preços</div>
-            <div class="feature-item"><span>✔</span> Painel de agendamentos em tempo real</div>
-            <div class="feature-item"><span>✔</span> Totalmente otimizado para celular</div>
+    <div class="container">
+        <span style="font-size: 60px;">📅</span>
+        <span class="titulo">BarberSaaS Pro</span>
+        <p style="color: #888;">Painel Master de Gestão</p>
+
+        <div id="login-area">
+            <input type="email" id="email-input" placeholder="Seu e-mail">
+            <input type="password" id="senha-input" placeholder="Sua senha">
+            <button id="btn-login">ENTRAR NO SISTEMA</button>
         </div>
-        <div class="promo-box">
-            <h3 style="margin:0; color:var(--gold);">OFERTA DE LANÇAMENTO</h3>
-            <p style="margin:10px 0 0 0;">Cadastre-se hoje e ganhe <b>30 dias grátis</b> para testar todas as funções!</p>
-        </div>
-        <button class="btn btn-gold" onclick="trocarTela('pAuth')">ACESSAR MEU PAINEL</button>
-        <p style="margin-top:20px; font-size:14px; color:#666;">© 2026 Inova Web Solutions</p>
+
+        <div id="status-msg"></div>
     </div>
 
-    <div id="pAgendar" class="page">
-        <h2 id="nomeBarbeariaAgendar" style="color:var(--gold); text-align:center;"></h2>
-        <div class="card">
-            <h3>Selecione os serviços:</h3>
-            <div id="listaServicosMultiplos" class="multi-select"></div>
-            <div class="total-box">Total: R$ <span id="valorTotalCliente">0.00</span></div>
-            <input type="text" id="cNome" placeholder="Seu Nome completo">
-            <input type="datetime-local" id="dataHoraAgendamento">
-            <button class="btn btn-gold" id="btnConfirmar" onclick="confirmarAgendamento()">FINALIZAR AGENDAMENTO</button>
-        </div>
-    </div>
+    <script type="module">
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
 
-    <div id="pAuth" class="page">
-        <h1 style="color:var(--gold); text-align:center; margin-top: 50px;">BarberSaaS</h1>
-        <div class="card">
-            <input type="email" id="uEmail" placeholder="E-mail">
-            <input type="password" id="uSenha" placeholder="Senha">
-            <button class="btn btn-gold" onclick="autenticar()">ENTRAR NO PAINEL</button>
-            <p style="text-align:center; cursor:pointer; font-size:16px; margin-top:15px;" onclick="trocarTela('pCadastro')"><b>Criar Nova Conta</b></p>
-            <p style="text-align:center; cursor:pointer; font-size:14px; color:#888;" onclick="trocarTela('pLanding')">Voltar ao Início</p>
-        </div>
-    </div>
+        // --- 1. CONFIGURAÇÃO (COLE SEUS DADOS AQUI) ---
+        const SUPABASE_URL = 'https://SUA_URL_AQUI.supabase.co'; 
+        const SUPABASE_KEY = 'SUA_KEY_ANON_AQUI';
+        // ----------------------------------------------
 
-    <div id="pCadastro" class="page">
-        <h2 style="color:var(--gold); text-align:center;">Nova Conta</h2>
-        <div class="card">
-            <input type="text" id="regNome" placeholder="Nome da Barbearia">
-            <input type="email" id="regEmail" placeholder="E-mail">
-            <input type="password" id="regSenha" placeholder="Senha">
-            <button class="btn btn-green" id="btnReg" onclick="registrarBarbeiro()">CADASTRAR</button>
-            <p style="text-align:center; cursor:pointer; font-size:16px; padding:10px;" onclick="trocarTela('pAuth')">Voltar</p>
-        </div>
-    </div>
+        const statusMsg = document.getElementById('status-msg');
 
-    <div id="pMaster" class="page">
-        <h2 style="color:var(--gold); text-align:center;">👑 ADMINISTRADOR</h2>
-        <div id="listaBarbeirosMaster"></div>
-        <button class="btn btn-red" onclick="sair()">SAIR</button>
-    </div>
+        // Inicialização protegida
+        let supabase;
+        if (SUPABASE_URL.includes('SUA_URL_AQUI')) {
+            statusMsg.innerText = "Erro: Configure a URL e a Key do Supabase no código.";
+        } else {
+            supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+        }
 
-    <div id="pBarbeiro" class="page">
-        <h2 id="nomeDaBarbeariaExibicao" style="color:var(--gold); text-align:center;"></h2>
-        <div class="card">
-            <h3>🔗 Seu Link</h3>
-            <code id="meuLink"></code>
-        </div>
-        <div class="card">
-            <h3>✂️ Meus Serviços</h3>
-            <div id="listaServicosBarbeiro"></div>
-            <input type="text" id="sNome" placeholder="Serviço">
-            <input type="number" id="sPreco" placeholder="R$">
-            <button class="btn btn-green" onclick="addServico()">ADICIONAR</button>
-        </div>
-        <div class="card">
-            <h3>📅 Próximos Agendamentos</h3>
-            <div id="listaAgendamentos"></div>
-            <button class="btn btn-gold" onclick="carregarAgendamentos()" style="padding:12px; font-size:14px;">ATUALIZAR LISTA</button>
-        </div>
-        <button class="btn btn-red" onclick="sair()">SAIR</button>
-    </div>
+        async function executarLogin() {
+            if (!supabase) {
+                statusMsg.innerText = "Erro: Supabase não inicializado.";
+                return;
+            }
 
-<script>
-    const _0x5a1 = "aHR0cHM6Ly9yZXJ1Y3B0b3hic2VuZnJvc2pncS5zdXBhYmFzZS5jbw==";
-    const _0x5a2 = "c2JfcHVibGlzaGFibGVfTXVELW9WOGF5a3BKZ2Ryb0lRakV6d19La2liXzRZVw==";
-    const _0x5a3 = "ZWRpZ2l0YWw2MzJAZ21haWwuY29t";
+            const email = document.getElementById('email-input').value;
+            const senha = document.getElementById('senha-input').value;
 
-    const URL_SB = atob(_0x5a1);
-    const KEY_SB = atob(_0x5a2);
-    const sb = window.supabase.createClient(URL_SB, KEY_SB);
-    
-    let logado_id = null;
-    const barbeiro_alvo_id = new URLSearchParams(window.location.search).get('id');
+            try {
+                statusMsg.style.color = "#888";
+                statusMsg.innerText = "Autenticando...";
 
-    window.onload = async () => {
-        if(barbeiro_alvo_id) {
-            const { data } = await sb.from('perfil_barbeiro').select('*').eq('id', barbeiro_alvo_id).maybeSingle();
-            if(data) {
-                if(data.status_pagamento !== 'Ativo') {
-                    document.body.innerHTML = "<h2 style='color:white; text-align:center; margin-top:100px;'>Inativo.</h2>";
-                    return;
-                }
-                document.getElementById('nomeBarbeariaAgendar').innerText = data.nome_salao;
-                trocarTela('pAgendar');
-                carregarServicosParaCliente();
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email: email,
+                    password: senha
+                });
+
+                if (error) throw error;
+
+                statusMsg.style.color = "#27ae60";
+                statusMsg.innerText = "Login realizado! Redirecionando...";
+                
+                // Salva o usuário no localStorage e redireciona (exemplo)
+                setTimeout(() => { location.reload(); }, 1500);
+
+            } catch (err) {
+                statusMsg.style.color = "#ff4d4d";
+                statusMsg.innerText = "Erro: " + err.message;
             }
         }
-    };
 
-    async function confirmarAgendamento() {
-        const n = document.getElementById('cNome').value;
-        const d = document.getElementById('dataHoraAgendamento').value;
-        const vTotal = document.getElementById('valorTotalCliente').innerText;
-        const btn = document.getElementById('btnConfirmar');
-        
-        const marcados = document.querySelectorAll('input[name="servicoCheck"]:checked');
-        let servicosEscolhidos = [];
-        marcados.forEach(check => servicosEscolhidos.push(check.value));
+        // Event Listener para evitar erro de "not defined"
+        document.getElementById('btn-login').addEventListener('click', executarLogin);
 
-        if(servicosEscolhidos.length === 0) return alert("Selecione pelo menos um serviço.");
-        if(!n || !d) return alert("Por favor, preencha seu nome e a data/hora.");
-
-        btn.innerText = "PROCESSANDO...";
-        btn.disabled = true;
-
-        const nomeFinal = `${n} | R$ ${vTotal} (${servicosEscolhidos.join(" + ")})`;
-        
-        const { error } = await sb.from('agendamentos').insert([
-            { cliente_nome: nomeFinal, data_hora: d, barbeiro_id: barbeiro_alvo_id }
-        ]);
-
-        if (error) {
-            alert("Erro ao agendar: " + error.message);
-            btn.innerText = "FINALIZAR AGENDAMENTO";
-            btn.disabled = false;
-        } else {
-            alert("Agendamento realizado com sucesso!");
-            document.getElementById('cNome').value = "";
-            document.getElementById('dataHoraAgendamento').value = "";
-            btn.innerText = "FINALIZAR AGENDAMENTO";
-            btn.disabled = false;
-        }
-    }
-
-    async function autenticar() {
-        const e = document.getElementById('uEmail').value;
-        const s = document.getElementById('uSenha').value;
-        if (!e || !s) { alert("Preencha e-mail e senha."); return; }
-        const { data } = await sb.from('perfil_barbeiro').select('*').eq('email', e).eq('senha', s).maybeSingle();
-        if (data) {
-            if (data.email === atob(_0x5a3)) { trocarTela('pMaster'); carregarMaster(); return; }
-            if (data.status_pagamento !== 'Ativo') { alert("ACESSO BLOQUEADO por falta de pagamento! Para continuar acessando a plataforma, regularize seu plano."); return; }
-            logado_id = data.id;
-            document.getElementById('nomeDaBarbeariaExibicao').innerText = data.nome_salao.toUpperCase();
-            document.getElementById('meuLink').innerText = window.location.origin + window.location.pathname + "?id=" + data.id;
-            trocarTela('pBarbeiro'); carregarServicos(); carregarAgendamentos();
-        } else { alert("E-mail ou senha incorretos."); }
-    }
-
-    async function registrarBarbeiro() {
-        const n = document.getElementById('regNome').value;
-        const e = document.getElementById('regEmail').value;
-        const s = document.getElementById('regSenha').value;
-        const btn = document.getElementById('btnReg');
-        if(!n || !e || !s) return alert("Preencha todos os campos.");
-        btn.innerText = "CADASTRANDO...";
-        btn.disabled = true;
-        const d = new Date(); d.setDate(d.getDate() + 30);
-        const { error } = await sb.from('perfil_barbeiro').insert([{ nome_salao: n, email: e, senha: s, status_pagamento: 'Ativo', data_expiracao: d.toISOString() }]);
-        if (error) { alert("Erro: " + error.message); btn.innerText = "CADASTRAR"; btn.disabled = false; }
-        else { alert("Sucesso!"); trocarTela('pAuth'); }
-    }
-
-    function atualizarSoma() {
-        let total = 0;
-        const marcados = document.querySelectorAll('input[name="servicoCheck"]:checked');
-        marcados.forEach(item => { total += parseFloat(item.getAttribute('data-preco')); });
-        document.getElementById('valorTotalCliente').innerText = total.toFixed(2);
-    }
-
-    async function carregarServicosParaCliente() {
-        const { data } = await sb.from('servicos').select('*').eq('barbeiro_id', barbeiro_alvo_id);
-        const container = document.getElementById('listaServicosMultiplos');
-        if(data) {
-            container.innerHTML = data.map(s => `
-                <div class="item-servico">
-                    <input type="checkbox" name="servicoCheck" value="${s.nome}" data-preco="${s.preco}" onchange="atualizarSoma()">
-                    <label>${s.nome} - R$ ${s.preco}</label>
-                </div>
-            `).join('');
-        }
-    }
-
-    async function carregarAgendamentos() {
-        const { data } = await sb.from('agendamentos').select('*').eq('barbeiro_id', logado_id).order('data_hora', { ascending: true });
-        if(data) {
-            document.getElementById('listaAgendamentos').innerHTML = data.map(a => `
-                <div class="card" style="border-left: 4px solid var(--gold);">
-                    <div class="agendamento-header">
-                        <div class="cliente-info"><b>👤 ${a.cliente_nome}</b><br><small>📅 ${new Date(a.data_hora).toLocaleString()}</small></div>
-                        <button class="btn-check-clear" onclick="finalizarAgendamento('${a.id}')">FINALIZAR ✅</button>
-                    </div>
-                </div>
-            `).join('');
-        }
-    }
-
-    async function finalizarAgendamento(id) {
-        if(confirm("Atendimento concluído?")) { await sb.from('agendamentos').delete().eq('id', id); carregarAgendamentos(); }
-    }
-
-    async function carregarMaster() {
-        const { data } = await sb.from('perfil_barbeiro').select('*').neq('email', atob(_0x5a3));
-        const agora = new Date();
-        if(data) {
-            document.getElementById('listaBarbeirosMaster').innerHTML = data.map(b => {
-                const expira = new Date(b.data_expiracao);
-                const diasRestantes = Math.ceil((expira - agora) / (1000 * 60 * 60 * 24));
-                return `<div class="card"><button class="btn-del" onclick="deletarBarbeiro('${b.id}')">🗑️</button><b>${b.nome_salao}</b><br><small>Expira em: ${diasRestantes} dias</small><br><button class="btn btn-gold" style="padding:10px; width:auto;" onclick="mudarStatus('${b.id}', '${b.status_pagamento}')">${b.status_pagamento}</button></div>`
-            }).join('');
-        }
-    }
-
-    async function deletarBarbeiro(id) { if(confirm("Excluir?")) { await sb.from('perfil_barbeiro').delete().eq('id', id); carregarMaster(); } }
-    async function mudarStatus(id, atual) { const novo = atual === 'Ativo' ? 'Inativo' : 'Ativo'; await sb.from('perfil_barbeiro').update({ status_pagamento: novo }).eq('id', id); carregarMaster(); }
-    async function carregarServicos() { const { data } = await sb.from('servicos').select('*').eq('barbeiro_id', logado_id); if(data) { document.getElementById('listaServicosBarbeiro').innerHTML = data.map(s => `<div style="display: flex; justify-content: space-between; margin-bottom:8px;"><span>${s.nome} - R$ ${s.preco}</span><span style="color:red; cursor:pointer;" onclick="deletarServico('${s.id}')"> [Remover]</span></div>`).join(''); } }
-    async function deletarServico(id) { await sb.from('servicos').delete().eq('id', id); carregarServicos(); }
-    async function addServico() { const n = document.getElementById('sNome').value; const p = document.getElementById('sPreco').value; await sb.from('servicos').insert([{ nome: n, preco: p, barbeiro_id: logado_id }]); carregarServicos(); }
-    function trocarTela(id) { document.querySelectorAll('.page').forEach(p => p.classList.remove('active')); document.getElementById(id).classList.add('active'); window.scrollTo(0,0); }
-    function sair() { window.location.search = ""; window.location.reload(); }
-</script>
+    </script>
 </body>
-</html> 
+</html>
