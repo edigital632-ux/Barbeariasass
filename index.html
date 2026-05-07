@@ -32,8 +32,9 @@
         .agendamento-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 5px; }
         .cliente-info { flex: 1; word-break: break-word; font-size: 16px; }
         .btn-check-clear { background: var(--green); border: none; color: white; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: bold; white-space: nowrap; }
-        .dash-faturamento { background: linear-gradient(45deg, #161616, #1a1a1a); border: 1px solid var(--green); }
+        .dash-faturamento { background: linear-gradient(45deg, #161616, #1a1a1a); border: 1px solid var(--green); display: flex; justify-content: space-between; align-items: center; }
         .txt-faturamento { font-size: 28px; color: var(--green); font-weight: bold; }
+        .btn-reset-fat { background: none; border: 1px solid #444; color: #888; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 12px; }
     </style>
 </head>
 <body>
@@ -98,9 +99,11 @@
     <div id="pBarbeiro" class="page">
         <h2 id="nomeDaBarbeariaExibicao" style="color:var(--gold); text-align:center;"></h2>
         <div class="card dash-faturamento">
-            <h3 style="margin:0; font-size:14px; color:var(--white);">💰 FATURAMENTO ACUMULADO</h3>
-            <div class="txt-faturamento">R$ <span id="valFaturamento">0.00</span></div>
-            <small style="color:#888;">(Calculado automaticamente ao finalizar)</small>
+            <div>
+                <h3 style="margin:0; font-size:14px; color:var(--white);">💰 FATURAMENTO ACUMULADO</h3>
+                <div class="txt-faturamento">R$ <span id="valFaturamento">0.00</span></div>
+            </div>
+            <button class="btn-reset-fat" onclick="zerarFaturamento()">ZERAR 🗑️</button>
         </div>
         <div class="card">
             <h3>🔗 Seu Link</h3>
@@ -153,6 +156,14 @@
         }
     };
 
+    function zerarFaturamento() {
+        if(confirm("Deseja zerar o faturamento acumulado?")) {
+            faturamentoDia = 0;
+            localStorage.setItem('faturamento_barber', 0);
+            document.getElementById('valFaturamento').innerText = "0.00";
+        }
+    }
+
     async function finalizarAgendamento(id, textoNome) {
         if(confirm("Atendimento concluído?")) { 
             try {
@@ -195,7 +206,7 @@
         const { data } = await sb.from('perfil_barbeiro').select('*').eq('email', e).eq('senha', s).maybeSingle();
         if (data) {
             if (data.email === atob(_0x5a3)) { trocarTela('pMaster'); carregarMaster(); return; }
-            if (data.status_pagamento !== 'Ativo') { alert("Acesso bloqueado por pagamento."); return; }
+            if (data.status_pagamento !== 'Ativo') { alert("Acesso bloqueado."); return; }
             logado_id = data.id;
             document.getElementById('nomeDaBarbeariaExibicao').innerText = data.nome_salao.toUpperCase();
             document.getElementById('meuLink').innerText = window.location.origin + window.location.pathname + "?id=" + data.id;
