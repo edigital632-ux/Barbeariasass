@@ -158,27 +158,29 @@
         }
     };
 
-    // FUNÇÃO TURBINADA PARA TENTAR ESCAPAR DO APK E ABRIR O ZAP
+    // FUNÇÃO REFEITA PARA ELIMINAR O ERRO ERR_UNKNOWN_URL_SCHEME
     function avisarNoZap(tel, nome, servico, data) {
         const texto = `Olá ${nome}! Seu horário para ${servico} em ${new Date(data).toLocaleString()} está confirmado!`;
         const linkSite = `https://api.whatsapp.com/send?phone=55${tel}&text=${encodeURIComponent(texto)}`;
-        const linkApp = `whatsapp://send?phone=55${tel}&text=${encodeURIComponent(texto)}`;
         
-        // 1ª Tentativa: Protocolo direto de APP (Geralmente funciona se o APK tiver permissão de deep link)
-        window.location.assign(linkApp);
+        // Em vez de usar window.location.assign (que causa o erro da imagem),
+        // vamos usar o window.open com o parâmetro '_system'.
+        // Isso diz ao Android para tirar o link de dentro do app e jogar para o sistema.
         
-        // 2ª Tentativa: Forçar abertura como se fosse um clique real (Alguns WebViews aceitam melhor)
-        const a = document.createElement('a');
-        a.href = linkApp;
-        a.target = '_blank';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-
-        // 3ª Tentativa: Link de site padrão após um pequeno delay
-        setTimeout(() => {
-            window.open(linkSite, '_system'); // O '_system' tenta forçar o navegador externo no Android
-        }, 300);
+        try {
+            const win = window.open(linkSite, '_system');
+            if (!win) {
+                // Se o bloqueador de pop-ups agir, tentamos o método de clique real
+                const a = document.createElement('a');
+                a.href = linkSite;
+                a.target = '_blank';
+                a.rel = 'noopener noreferrer';
+                a.click();
+            }
+        } catch (e) {
+            // Último recurso caso tudo falhe
+            window.location.href = linkSite;
+        }
     }
 
     async function autenticar() {
@@ -193,7 +195,8 @@
                 const msgBloqueio = `Seu acesso foi bloqueado por falta de pagamento.\n\nPara continuar acessando, entre em contato com o suporte pelo WhatsApp.`;
                 if(confirm(msgBloqueio)) {
                     const textoZap = encodeURIComponent(`Olá, sou o dono da ${data.nome_salao} e meu acesso foi bloqueado por falta de pagamento. Gostaria de regularizar.`);
-                    window.location.assign(`whatsapp://send?phone=${SEU_ZAP_ADMIN}&text=${textoZap}`);
+                    const linkBloqueio = `https://api.whatsapp.com/send?phone=${SEU_ZAP_ADMIN}&text=${textoZap}`;
+                    window.open(linkBloqueio, '_system');
                 }
                 return; 
             }
