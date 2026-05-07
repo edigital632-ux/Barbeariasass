@@ -7,7 +7,22 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root { --gold: #d4af37; --dark: #0a0a0a; --card: #161616; --red: #ff4d4d; --green: #2ecc71; --white: #eeeeee; }
-        body { background-color: var(--dark); color: var(--white); font-family: sans-serif; margin: 0; padding: 0; }
+        body { background-color: var(--dark); color: var(--white); font-family: sans-serif; margin: 0; padding: 0; overflow-x: hidden; }
+        
+        /* AJUSTE DE CLICABILIDADE */
+        .page { 
+            display: none; 
+            padding: 20px; 
+            min-height: 100vh; 
+            box-sizing: border-box; 
+            position: relative;
+            z-index: 1;
+        }
+        .active { 
+            display: block !important; 
+            z-index: 10 !important; /* Garante que a tela ativa receba o clique */
+        }
+
         #pLanding { text-align: center; padding: 40px 20px; background: linear-gradient(180deg, #1a1a1a 0%, #0a0a0a 100%); }
         .hero-title { color: var(--gold); font-size: 32px; text-transform: uppercase; margin-bottom: 10px; }
         .hero-sub { font-size: 18px; color: #ccc; margin-bottom: 30px; line-height: 1.5; }
@@ -15,11 +30,9 @@
         .feature-item { display: flex; align-items: center; margin-bottom: 15px; font-size: 16px; }
         .feature-item span { color: var(--gold); margin-right: 10px; font-size: 20px; }
         .promo-box { background: rgba(212, 175, 55, 0.1); border: 1px solid var(--gold); padding: 20px; border-radius: 12px; margin-bottom: 30px; }
-        .page { display: none; padding: 20px; min-height: 100vh; box-sizing: border-box; }
-        .active { display: block !important; }
         .card { background: var(--card); padding: 15px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #333; position: relative; }
         input, select { width: 100%; padding: 15px; margin: 10px 0; background: #222; border: 1px solid #444; color: white; border-radius: 8px; box-sizing: border-box; font-size: 18px; }
-        .btn { width: 100%; padding: 18px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; text-transform: uppercase; margin-top: 10px; font-size: 16px; }
+        .btn { width: 100%; padding: 18px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; text-transform: uppercase; margin-top: 10px; font-size: 16px; position: relative; z-index: 20; }
         .btn-gold { background: var(--gold); color: black; }
         .btn-red { background: var(--red); color: white; }
         .btn-green { background: var(--green); color: white; }
@@ -75,7 +88,7 @@
         <div class="card">
             <input type="email" id="uEmail" placeholder="E-mail">
             <input type="password" id="uSenha" placeholder="Senha">
-            <button class="btn btn-gold" onclick="autenticar()">ENTRAR NO PAINEL</button>
+            <button class="btn btn-gold" id="btnLogar" onclick="autenticar()">ENTRAR NO PAINEL</button>
             <p style="text-align:center; cursor:pointer; font-size:16px; margin-top:15px;" onclick="trocarTela('pCadastro')"><b>Criar Nova Conta</b></p>
             <p style="text-align:center; cursor:pointer; font-size:14px; color:#888;" onclick="trocarTela('pLanding')">Voltar ao Início</p>
         </div>
@@ -158,7 +171,6 @@
         }
     };
 
-    // FUNÇÃO WHATSAPP
     function avisarNoZap(tel, nome, servico, data) {
         const msg = `Olá ${nome}! Seu horário para ${servico} em ${new Date(data).toLocaleString()} está confirmado!`;
         window.open(`https://api.whatsapp.com/send?phone=55${tel}&text=${encodeURIComponent(msg)}`, '_blank');
@@ -185,14 +197,13 @@
         alert("Agendamento realizado!"); location.reload();
     }
 
-    async function finalizarAgendamento(id, precoStr, zap, nome) {
+    async function finalizarAgendamento(id, precoStr, zap) {
         if(confirm("Atendimento concluído?")) {
             const valor = parseFloat(precoStr.replace('R$ ', '')) || 0;
             faturamentoDia += valor;
             localStorage.setItem('faturamento_barber', faturamentoDia);
             document.getElementById('valFaturamento').innerText = faturamentoDia.toFixed(2);
 
-            // Lógica de Fidelidade: Tenta atualizar ou inserir ponto para o cliente
             try {
                 const { data: fid } = await sb.from('fidelidade_clientes').select('*').eq('barbeiro_id', logado_id).eq('cliente_zap', zap).maybeSingle();
                 if(fid) {
@@ -200,7 +211,7 @@
                 } else {
                     await sb.from('fidelidade_clientes').insert([{ barbeiro_id: logado_id, cliente_zap: zap, total_cortes: 1 }]);
                 }
-            } catch(e) { console.log("Erro fidelidade", e); }
+            } catch(e) {}
 
             await sb.from('agendamentos').delete().eq('id', id); 
             carregarAgendamentos(); 
@@ -219,7 +230,7 @@
                             <small style="color:var(--gold)">${a.comentario_cliente}</small><br>
                             <button class="btn-zap" onclick="avisarNoZap('${a.cliente_zap}','${a.cliente_nome}','${a.comentario_cliente}','${a.data_hora}')">NOTIFICAR WHATSAPP 📱</button>
                         </div>
-                        <button class="btn-check-clear" onclick="finalizarAgendamento('${a.id}', '${a.comentario_cliente}', '${a.cliente_zap}', '${a.cliente_nome}')">FINALIZAR ✅</button>
+                        <button class="btn-check-clear" onclick="finalizarAgendamento('${a.id}', '${a.comentario_cliente}', '${a.cliente_zap}')">FINALIZAR ✅</button>
                     </div>
                 </div>
             `).join('');
@@ -240,30 +251,29 @@
         } else { alert("Dados incorretos."); }
     }
 
-    async function deletarBarbeiro(id) { 
-        if(confirm("Excluir este barbeiro?")) { 
-            await sb.from('servicos').delete().eq('barbeiro_id', id);
-            await sb.from('fidelidade_clientes').delete().eq('barbeiro_id', id);
-            await sb.from('agendamentos').delete().eq('barbeiro_id', id);
-            await sb.from('perfil_barbeiro').delete().eq('id', id);
-            carregarMaster(); 
-        } 
+    function trocarTela(id) { 
+        document.querySelectorAll('.page').forEach(p => {
+            p.classList.remove('active');
+            p.style.display = 'none';
+        });
+        const target = document.getElementById(id);
+        target.classList.add('active');
+        target.style.display = 'block';
+        window.scrollTo(0,0); 
     }
 
-    async function registrarBarbeiro() {
-        const n = document.getElementById('regNome').value;
-        const e = document.getElementById('regEmail').value;
-        const s = document.getElementById('regSenha').value;
-        const d = new Date(); d.setDate(d.getDate() + 30);
-        await sb.from('perfil_barbeiro').insert([{ nome_salao: n, email: e, senha: s, status_pagamento: 'Ativo', data_expiracao: d.toISOString() }]);
-        alert("Cadastrado!"); trocarTela('pAuth');
-    }
-
-    function atualizarSoma() {
-        let t = 0;
-        document.querySelectorAll('input[name="servicoCheck"]:checked').forEach(i => t += parseFloat(i.getAttribute('data-preco')));
-        document.getElementById('valorTotalCliente').innerText = t.toFixed(2);
-    }
-    async function carregarServicosParaCliente() {
-        const { data } = await sb.from('servicos').select('*').eq('barbeiro_id', barbeiro_alvo_id);
-        if(data) document.getElementById('listaServicosMultiplos').innerHTML = data.map(s => `<div class="item-servico"><input type="checkbox" name="servicoCheck" value="${s.nome}" data-preco="${s.preco}" onchange="atualizarSoma()"><label>${s.nome} - R$ ${s.preco}</label></div>`).join('');
+    // Mantendo demais funções
+    async function deletarBarbeiro(id) { if(confirm("Excluir?")) { await sb.from('servicos').delete().eq('barbeiro_id', id); await sb.from('fidelidade_clientes').delete().eq('barbeiro_id', id); await sb.from('agendamentos').delete().eq('barbeiro_id', id); await sb.from('perfil_barbeiro').delete().eq('id', id); carregarMaster(); } }
+    async function registrarBarbeiro() { const n = document.getElementById('regNome').value; const e = document.getElementById('regEmail').value; const s = document.getElementById('regSenha').value; const d = new Date(); d.setDate(d.getDate() + 30); await sb.from('perfil_barbeiro').insert([{ nome_salao: n, email: e, senha: s, status_pagamento: 'Ativo', data_expiracao: d.toISOString() }]); alert("Cadastrado!"); trocarTela('pAuth'); }
+    function atualizarSoma() { let t = 0; document.querySelectorAll('input[name="servicoCheck"]:checked').forEach(i => t += parseFloat(i.getAttribute('data-preco'))); document.getElementById('valorTotalCliente').innerText = t.toFixed(2); }
+    async function carregarServicosParaCliente() { const { data } = await sb.from('servicos').select('*').eq('barbeiro_id', barbeiro_alvo_id); if(data) document.getElementById('listaServicosMultiplos').innerHTML = data.map(s => `<div class="item-servico"><input type="checkbox" name="servicoCheck" value="${s.nome}" data-preco="${s.preco}" onchange="atualizarSoma()"><label>${s.nome} - R$ ${s.preco}</label></div>`).join(''); }
+    async function carregarMaster() { const { data } = await sb.from('perfil_barbeiro').select('*').neq('email', atob(_0x5a3)); if(data) document.getElementById('listaBarbeirosMaster').innerHTML = data.map(b => `<div class="card"><button class="btn-del" onclick="deletarBarbeiro('${b.id}')">🗑️</button><b>${b.nome_salao}</b><br><button class="btn btn-gold" onclick="mudarStatus('${b.id}', '${b.status_pagamento}')">${b.status_pagamento}</button></div>`).join(''); }
+    async function mudarStatus(id, atual) { const n = atual === 'Ativo' ? 'Inativo' : 'Ativo'; await sb.from('perfil_barbeiro').update({ status_pagamento: n }).eq('id', id); carregarMaster(); }
+    async function carregarServicos() { const { data } = await sb.from('servicos').select('*').eq('barbeiro_id', logado_id); if(data) document.getElementById('listaServicosBarbeiro').innerHTML = data.map(s => `<div style="display:flex; justify-content:space-between; margin-bottom:8px;"><span>${s.nome} - R$ ${s.preco}</span><span style="color:red; cursor:pointer;" onclick="deletarServico('${s.id}')"> [Remover]</span></div>`).join(''); }
+    async function deletarServico(id) { await sb.from('servicos').delete().eq('id', id); carregarServicos(); }
+    async function addServico() { await sb.from('servicos').insert([{ nome: document.getElementById('sNome').value, preco: document.getElementById('sPreco').value, barbeiro_id: logado_id }]); carregarServicos(); }
+    function sair() { window.location.search = ""; window.location.reload(); }
+    function zerarFaturamento() { if(confirm("Zerar?")) { faturamentoDia = 0; localStorage.setItem('faturamento_barber', 0); document.getElementById('valFaturamento').innerText = "0.00"; } }
+</script>
+</body>
+</html>
