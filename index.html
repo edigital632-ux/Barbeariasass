@@ -32,10 +32,7 @@
         .agendamento-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 5px; }
         .cliente-info { flex: 1; word-break: break-word; font-size: 16px; }
         .btn-check-clear { background: var(--green); border: none; color: white; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: bold; white-space: nowrap; }
-        
-        /* Novas Classes de Faturamento */
-        .dash-faturamento { background: linear-gradient(45deg, #161616, #1a1a1a); border: 1px solid var(--green); }
-        .txt-faturamento { font-size: 28px; color: var(--green); font-weight: bold; }
+        .legenda { font-size: 13px; color: #888; margin-bottom: 10px; font-style: italic; }
     </style>
 </head>
 <body>
@@ -99,13 +96,6 @@
 
     <div id="pBarbeiro" class="page">
         <h2 id="nomeDaBarbeariaExibicao" style="color:var(--gold); text-align:center;"></h2>
-        
-        <div class="card dash-faturamento">
-            <h3 style="margin:0; font-size:14px; color:var(--white);">💰 FATURAMENTO DO DIA</h3>
-            <div class="txt-faturamento">R$ <span id="valFaturamento">0.00</span></div>
-            <small style="color:#888;">(Soma automática ao finalizar agendamentos)</small>
-        </div>
-
         <div class="card">
             <h3>🔗 Seu Link</h3>
             <code id="meuLink"></code>
@@ -135,15 +125,9 @@
     const sb = window.supabase.createClient(URL_SB, KEY_SB);
     
     let logado_id = null;
-    let faturamentoDia = 0; // Variável para o faturamento
     const barbeiro_alvo_id = new URLSearchParams(window.location.search).get('id');
 
     window.onload = async () => {
-        // Carrega faturamento salvo no navegador (opcional)
-        const salvo = localStorage.getItem('faturamento_barber');
-        if(salvo) faturamentoDia = parseFloat(salvo);
-        document.getElementById('valFaturamento').innerText = faturamentoDia.toFixed(2);
-
         if(barbeiro_alvo_id) {
             const { data } = await sb.from('perfil_barbeiro').select('*').eq('id', barbeiro_alvo_id).maybeSingle();
             if(data) {
@@ -158,24 +142,127 @@
         }
     };
 
-    // --- FUNÇÃO PARA CALCULAR O FATURAMENTO AO FINALIZAR ---
-    async function finalizarAgendamento(id, textoNome) {
-        if(confirm("Atendimento concluído?")) { 
-            // Tenta extrair o valor de dentro do nome salvo (Ex: "R$ 30.00")
-            try {
-                const regexPreco = /R\$ ([\d.]+)/;
-                const match = textoNome.match(regexPreco);
-                if(match && match[1]) {
-                    const valorCorte = parseFloat(match[1]);
-                    faturamentoDia += valorCorte;
-                    localStorage.setItem('faturamento_barber', faturamentoDia);
-                    document.getElementById('valFaturamento').innerText = faturamentoDia.toFixed(2);
-                }
-            } catch(e) { console.log("Erro ao somar faturamento"); }
+    async function confirmarAgendamento() {
+        const n = document.getElementById('cNome').value;
+        const d = document.getElementById('dataHoraAgendamento').value;
+        const vTotal = document.getElementById('valorTotalCliente').innerText;
+        const btn = document.getElementById('btnConfirmar');
+        
+        const marcados = document.querySelectorAll('input[name="servicoCheck"]:checked');
+        let servicosEscolhidos = [];
+        marcados.forEach(check => servicosEscolhidos.push(check.value));
 
-            await sb.from('agendamentos').delete().eq('id', id); 
-            carregarAgendamentos(); 
+        if(servicosEscolhidos.length === 0) return alert("Selecione pelo menos um serviço.");
+        if(!n || !d) return alert("Por favor, preencha seu nome e a data/hora.");
+
+        btn.innerText = "PROCESSANDO...";
+        btn.disabled = true;
+
+        const nomeFinal = `${n} | R$ ${vTotal} (${servicosEscolhidos.join(" + ")})`;
+        
+        const { error } = await sb.from('agendamentos').insert([
+            { cliente_nome: nomeFinal, data_hora: d, barbeiro_id: barbeiro_alvo_id }
+        ]);
+
+        if (error) {
+            alert("Erro ao agendar: " + error.message);
+            btn.innerText = "FINALIZAR AGENDAMENTO";
+            btn.disabled = false;
+        } else {
+            alert("Agendamento realizado com sucesso!");
+            document.getElementById('cNome').value = "";
+            document.getElementById('dataHoraAgendamento').value = "";
+            btn.innerText = "FINALIZAR AGENDAMENTO";
+            btn.disabled = false;
         }
     }
 
-    // --- RESTANTE DO CÓDIGO IG
+    async function autenticar() {
+        const e = document.getElementById('uEmail').value;
+        const s = document.getElementById('uSenha').value;
+        if (!e || !s) { alert("Preencha e-mail e senha."); return; }
+        const { data } = await sb.from('perfil_barbeiro').select('*').eq('email', e).eq('senha', s).maybeSingle();
+        if (data) {
+            if (data.email === atob(_0x5a3)) { trocarTela('pMaster'); carregarMaster(); return; }
+            if (data.status_pagamento !== 'Ativo') { alert("ACESSO BLOQUEADO por falta de pagamento! Para continuar acessando a plataforma, regularize seu plano."); return; }
+            logado_id = data.id;
+            document.getElementById('nomeDaBarbeariaExibicao').innerText = data.nome_salao.toUpperCase();
+            document.getElementById('meuLink').innerText = window.location.origin + window.location.pathname + "?id=" + data.id;
+            trocarTela('pBarbeiro'); carregarServicos(); carregarAgendamentos();
+        } else { alert("E-mail ou senha incorretos."); }
+    }
+
+    async function registrarBarbeiro() {
+        const n = document.getElementById('regNome').value;
+        const e = document.getElementById('regEmail').value;
+        const s = document.getElementById('regSenha').value;
+        const btn = document.getElementById('btnReg');
+        if(!n || !e || !s) return alert("Preencha todos os campos.");
+        btn.innerText = "CADASTRANDO...";
+        btn.disabled = true;
+        const d = new Date(); d.setDate(d.getDate() + 30);
+        const { error } = await sb.from('perfil_barbeiro').insert([{ nome_salao: n, email: e, senha: s, status_pagamento: 'Ativo', data_expiracao: d.toISOString() }]);
+        if (error) { alert("Erro: " + error.message); btn.innerText = "CADASTRAR"; btn.disabled = false; }
+        else { alert("Sucesso!"); trocarTela('pAuth'); }
+    }
+
+    function atualizarSoma() {
+        let total = 0;
+        const marcados = document.querySelectorAll('input[name="servicoCheck"]:checked');
+        marcados.forEach(item => { total += parseFloat(item.getAttribute('data-preco')); });
+        document.getElementById('valorTotalCliente').innerText = total.toFixed(2);
+    }
+
+    async function carregarServicosParaCliente() {
+        const { data } = await sb.from('servicos').select('*').eq('barbeiro_id', barbeiro_alvo_id);
+        const container = document.getElementById('listaServicosMultiplos');
+        if(data) {
+            container.innerHTML = data.map(s => `
+                <div class="item-servico">
+                    <input type="checkbox" name="servicoCheck" value="${s.nome}" data-preco="${s.preco}" onchange="atualizarSoma()">
+                    <label>${s.nome} - R$ ${s.preco}</label>
+                </div>
+            `).join('');
+        }
+    }
+
+    async function carregarAgendamentos() {
+        const { data } = await sb.from('agendamentos').select('*').eq('barbeiro_id', logado_id).order('data_hora', { ascending: true });
+        if(data) {
+            document.getElementById('listaAgendamentos').innerHTML = data.map(a => `
+                <div class="card" style="border-left: 4px solid var(--gold);">
+                    <div class="agendamento-header">
+                        <div class="cliente-info"><b>👤 ${a.cliente_nome}</b><br><small>📅 ${new Date(a.data_hora).toLocaleString()}</small></div>
+                        <button class="btn-check-clear" onclick="finalizarAgendamento('${a.id}')">FINALIZAR ✅</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+    }
+
+    async function finalizarAgendamento(id) {
+        if(confirm("Atendimento concluído?")) { await sb.from('agendamentos').delete().eq('id', id); carregarAgendamentos(); }
+    }
+
+    async function carregarMaster() {
+        const { data } = await sb.from('perfil_barbeiro').select('*').neq('email', atob(_0x5a3));
+        const agora = new Date();
+        if(data) {
+            document.getElementById('listaBarbeirosMaster').innerHTML = data.map(b => {
+                const expira = new Date(b.data_expiracao);
+                const diasRestantes = Math.ceil((expira - agora) / (1000 * 60 * 60 * 24));
+                return `<div class="card"><button class="btn-del" onclick="deletarBarbeiro('${b.id}')">🗑️</button><b>${b.nome_salao}</b><br><small>Expira em: ${diasRestantes} dias</small><br><button class="btn btn-gold" style="padding:10px; width:auto;" onclick="mudarStatus('${b.id}', '${b.status_pagamento}')">${b.status_pagamento}</button></div>`
+            }).join('');
+        }
+    }
+
+    async function deletarBarbeiro(id) { if(confirm("Excluir?")) { await sb.from('perfil_barbeiro').delete().eq('id', id); carregarMaster(); } }
+    async function mudarStatus(id, atual) { const novo = atual === 'Ativo' ? 'Inativo' : 'Ativo'; await sb.from('perfil_barbeiro').update({ status_pagamento: novo }).eq('id', id); carregarMaster(); }
+    async function carregarServicos() { const { data } = await sb.from('servicos').select('*').eq('barbeiro_id', logado_id); if(data) { document.getElementById('listaServicosBarbeiro').innerHTML = data.map(s => `<div style="display: flex; justify-content: space-between; margin-bottom:8px;"><span>${s.nome} - R$ ${s.preco}</span><span style="color:red; cursor:pointer;" onclick="deletarServico('${s.id}')"> [Remover]</span></div>`).join(''); } }
+    async function deletarServico(id) { await sb.from('servicos').delete().eq('id', id); carregarServicos(); }
+    async function addServico() { const n = document.getElementById('sNome').value; const p = document.getElementById('sPreco').value; await sb.from('servicos').insert([{ nome: n, preco: p, barbeiro_id: logado_id }]); carregarServicos(); }
+    function trocarTela(id) { document.querySelectorAll('.page').forEach(p => p.classList.remove('active')); document.getElementById(id).classList.add('active'); window.scrollTo(0,0); }
+    function sair() { window.location.search = ""; window.location.reload(); }
+</script>
+</body>
+</html> 
