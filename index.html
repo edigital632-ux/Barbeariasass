@@ -158,6 +158,21 @@
         }
     };
 
+    // FUNÇÃO MELHORADA PARA FUNCIONAR EM APK (KODULAR)
+    function avisarNoZap(tel, nome, servico, data) {
+        const texto = `Olá ${nome}! Seu horário para ${servico} em ${new Date(data).toLocaleString()} está confirmado!`;
+        const linkSite = `https://api.whatsapp.com/send?phone=55${tel}&text=${encodeURIComponent(texto)}`;
+        const linkApp = `whatsapp://send?phone=55${tel}&text=${encodeURIComponent(texto)}`;
+        
+        // Tenta abrir pelo protocolo de app primeiro (funciona melhor em APKs)
+        window.location.assign(linkApp);
+        
+        // Backup: Se em 500ms não abrir o app, tenta o link normal de site
+        setTimeout(() => {
+            window.open(linkSite, '_blank');
+        }, 500);
+    }
+
     async function autenticar() {
         const e = document.getElementById('uEmail').value;
         const s = document.getElementById('uSenha').value;
@@ -170,7 +185,9 @@
                 const msgBloqueio = `Seu acesso foi bloqueado por falta de pagamento.\n\nPara continuar acessando, entre em contato com o suporte pelo WhatsApp.`;
                 if(confirm(msgBloqueio)) {
                     const textoZap = encodeURIComponent(`Olá, sou o dono da ${data.nome_salao} e meu acesso foi bloqueado por falta de pagamento. Gostaria de regularizar.`);
-                    window.open(`https://api.whatsapp.com/send?phone=${SEU_ZAP_ADMIN}&text=${textoZap}`, '_blank');
+                    const linkZapApp = `whatsapp://send?phone=${SEU_ZAP_ADMIN}&text=${textoZap}`;
+                    window.location.assign(linkZapApp);
+                    setTimeout(() => { window.open(`https://api.whatsapp.com/send?phone=${SEU_ZAP_ADMIN}&text=${textoZap}`, '_blank'); }, 500);
                 }
                 return; 
             }
@@ -190,7 +207,7 @@
         window.scrollTo(0,0); 
     }
 
-    // --- FUNÇÕES DE APOIO ---
+    // --- AS DEMAIS FUNÇÕES CONTINUAM IGUAIS ---
     async function confirmarAgendamento() { const n = document.getElementById('cNome').value; const z = document.getElementById('cZap').value.replace(/\D/g, ''); const d = document.getElementById('dataHoraAgendamento').value; const v = document.getElementById('valorTotalCliente').innerText; const marcados = document.querySelectorAll('input[name="servicoCheck"]:checked'); let servicosEscolhidos = []; marcados.forEach(check => servicosEscolhidos.push(check.value)); if(servicosEscolhidos.length === 0 || !n || !d || !z) return alert("Preencha todos os campos."); await sb.from('agendamentos').insert([{ cliente_nome: n, cliente_zap: z, data_hora: d, barbeiro_id: barbeiro_alvo_id, comentario_cliente: `R$ ${v} (${servicosEscolhidos.join("+")})` }]); alert("Agendamento realizado!"); location.reload(); }
     async function finalizarAgendamento(id, precoStr, zap) { if(confirm("Atendimento concluído?")) { const valor = parseFloat(precoStr.replace('R$ ', '')) || 0; faturamentoDia += valor; localStorage.setItem('faturamento_barber', faturamentoDia); document.getElementById('valFaturamento').innerText = faturamentoDia.toFixed(2); try { const { data: fid } = await sb.from('fidelidade_clientes').select('*').eq('barbeiro_id', logado_id).eq('cliente_zap', zap).maybeSingle(); if(fid) { await sb.from('fidelidade_clientes').update({ total_cortes: fid.total_cortes + 1 }).eq('id', fid.id); } else { await sb.from('fidelidade_clientes').insert([{ barbeiro_id: logado_id, cliente_zap: zap, total_cortes: 1 }]); } } catch(e) {} await sb.from('agendamentos').delete().eq('id', id); carregarAgendamentos(); } }
     async function carregarAgendamentos() { const { data } = await sb.from('agendamentos').select('*').eq('barbeiro_id', logado_id).order('data_hora', { ascending: true }); if(data) { document.getElementById('listaAgendamentos').innerHTML = data.map(a => `<div class="card" style="border-left:4px solid var(--gold);"><div class="agendamento-header"><div class="cliente-info"><b>👤 ${a.cliente_nome}</b><br><small>📅 ${new Date(a.data_hora).toLocaleString()}</small><br><small style="color:var(--gold)">${a.comentario_cliente}</small><br><button class="btn-zap" onclick="avisarNoZap('${a.cliente_zap}','${a.cliente_nome}','${a.comentario_cliente}','${a.data_hora}')">NOTIFICAR WHATSAPP 📱</button></div><button class="btn-check-clear" onclick="finalizarAgendamento('${a.id}', '${a.comentario_cliente}', '${a.cliente_zap}')">FINALIZAR ✅</button></div></div>`).join(''); } }
@@ -205,7 +222,6 @@
     async function addServico() { await sb.from('servicos').insert([{ nome: document.getElementById('sNome').value, preco: document.getElementById('sPreco').value, barbeiro_id: logado_id }]); carregarServicos(); }
     function sair() { window.location.search = ""; window.location.reload(); }
     function zerarFaturamento() { if(confirm("Zerar?")) { faturamentoDia = 0; localStorage.setItem('faturamento_barber', 0); document.getElementById('valFaturamento').innerText = "0.00"; } }
-    function avisarNoZap(tel, nome, servico, data) { const msg = `Olá ${nome}! Seu horário para ${servico} em ${new Date(data).toLocaleString()} está confirmado!`; window.open(`https://api.whatsapp.com/send?phone=55${tel}&text=${encodeURIComponent(msg)}`, '_blank'); }
 </script>
 </body>
 </html>
