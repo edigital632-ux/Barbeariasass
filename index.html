@@ -3,214 +3,313 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BarberSaaS Pro - Sistema para Barbearias</title>
+    <title>BarberSaaS Pro v2.0</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --gold: #d4af37; --dark: #0a0a0a; --card: #161616; --red: #ff4d4d; --green: #2ecc71; --white: #eeeeee; }
-        body { background-color: var(--dark); color: var(--white); font-family: sans-serif; margin: 0; padding: 0; overflow-x: hidden; }
-        .page { display: none; padding: 20px; min-height: 100vh; box-sizing: border-box; position: relative; z-index: 1; }
-        .active { display: block !important; z-index: 10 !important; }
-        #pLanding { text-align: center; padding: 40px 20px; background: linear-gradient(180deg, #1a1a1a 0%, #0a0a0a 100%); }
-        .hero-title { color: var(--gold); font-size: 32px; text-transform: uppercase; margin-bottom: 10px; }
-        .hero-sub { font-size: 18px; color: #ccc; margin-bottom: 30px; line-height: 1.5; }
-        .features { text-align: left; max-width: 500px; margin: 0 auto 30px auto; }
-        .feature-item { display: flex; align-items: center; margin-bottom: 15px; font-size: 16px; }
-        .feature-item span { color: var(--gold); margin-right: 10px; font-size: 20px; }
-        .promo-box { background: rgba(212, 175, 55, 0.1); border: 1px solid var(--gold); padding: 20px; border-radius: 12px; margin-bottom: 30px; }
-        .card { background: var(--card); padding: 15px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #333; position: relative; }
-        input, select { width: 100%; padding: 15px; margin: 10px 0; background: #222; border: 1px solid #444; color: white; border-radius: 8px; box-sizing: border-box; font-size: 18px; }
-        .btn { width: 100%; padding: 18px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; text-transform: uppercase; margin-top: 10px; font-size: 16px; position: relative; z-index: 20; }
-        .btn-gold { background: var(--gold); color: black; }
-        .btn-red { background: var(--red); color: white; }
-        .btn-green { background: var(--green); color: white; }
-        code { display: block; background: #000; padding: 10px; border-radius: 5px; color: var(--gold); font-size: 11px; word-break: break-all; margin-top: 10px; border: 1px dashed var(--gold); }
-        .btn-del { background: none; border: none; color: #ff4d4d; cursor: pointer; font-size: 20px; position: absolute; top: 10px; right: 10px; }
-        .multi-select { background: #222; padding: 10px; border-radius: 8px; border: 1px solid #444; margin: 10px 0; }
-        .item-servico { display: flex; align-items: center; margin-bottom: 12px; font-size: 18px; border-bottom: 1px solid #333; padding: 10px 0; }
-        .item-servico input { width: auto; margin-right: 20px; transform: scale(1.8); }
-        .total-box { font-size: 22px; font-weight: bold; color: var(--green); text-align: right; margin: 10px 0; }
-        .agendamento-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 5px; }
-        .cliente-info { flex: 1; word-break: break-word; font-size: 16px; }
-        .btn-check-clear { background: var(--green); border: none; color: white; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: bold; white-space: nowrap; }
-        .btn-zap { background: #25d366; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: bold; margin-top: 5px; }
-        .dash-faturamento { background: linear-gradient(45deg, #161616, #1a1a1a); border: 1px solid var(--green); display: flex; justify-content: space-between; align-items: center; }
-        .txt-faturamento { font-size: 28px; color: var(--green); font-weight: bold; }
-        .btn-reset-fat { background: none; border: 1px solid #444; color: #888; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 12px; }
+        :root { --gold: #d4af37; --dark: #000000; --card: #121212; --red: #ff4d4d; --green: #00e676; --white: #f5f5f5; --gray: #222; }
+        body { background-color: var(--dark); color: var(--white); font-family: 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 0; }
+        .page { display: none; padding: 20px; min-height: 100vh; box-sizing: border-box; }
+        .active { display: block !important; animation: fadeIn 0.4s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Dashboard Premium */
+        .dash-container { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        .stat-card { background: var(--card); border: 1px solid var(--gray); padding: 15px; border-radius: 15px; text-align: center; border-bottom: 3px solid var(--gold); }
+        .stat-val { display: block; font-size: 20px; font-weight: bold; color: var(--gold); }
+        .stat-label { font-size: 10px; text-transform: uppercase; color: #888; }
+
+        /* Cards e Inputs Modernos */
+        .card { background: var(--card); padding: 20px; border-radius: 18px; margin-bottom: 15px; border: 1px solid var(--gray); position: relative; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        input, select { width: 100%; padding: 15px; margin: 10px 0; background: #1a1a1a; border: 1px solid #333; color: white; border-radius: 10px; box-sizing: border-box; font-size: 16px; transition: 0.3s; }
+        input:focus { border-color: var(--gold); outline: none; background: #222; }
+        
+        .btn { width: 100%; padding: 16px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; text-transform: uppercase; font-size: 14px; transition: 0.2s; letter-spacing: 1px; }
+        .btn:active { transform: scale(0.98); }
+        .btn-gold { background: linear-gradient(135deg, #d4af37, #b8860b); color: black; }
+        .btn-green { background: #00e676; color: black; }
+        .btn-red { background: #333; color: var(--red); border: 1px solid #444; margin-top: 20px; }
+
+        /* Badge de Fidelidade */
+        .fidelidade-badge { background: rgba(0, 230, 118, 0.1); color: var(--green); padding: 4px 8px; border-radius: 5px; font-size: 11px; font-weight: bold; display: inline-block; margin-bottom: 10px; border: 1px solid var(--green); }
+        code { display: block; background: #050505; padding: 12px; border-radius: 8px; color: var(--gold); font-size: 11px; border: 1px solid #222; margin: 10px 0; }
+        
+        .item-servico { display: flex; align-items: center; padding: 12px; border-bottom: 1px solid #222; }
+        .item-servico input { width: 22px; height: 22px; margin-right: 15px; accent-color: var(--gold); }
+        
+        .total-floating { font-size: 24px; font-weight: bold; color: var(--green); text-align: right; margin: 15px 0; border-top: 1px solid #333; padding-top: 10px; }
     </style>
 </head>
 <body>
 
-    <!-- TODAS AS TELAS MANTIDAS IGUAIS -->
-    <div id="pLanding" class="page active">
-        <h1 class="hero-title">BarberSaaS Pro</h1>
-        <p class="hero-sub">O sistema de agendamento que coloca seu salão em outro nível.</p>
-        <div class="features">
-            <div class="feature-item"><span>✔</span> Link exclusivo para seus clientes</div>
-            <div class="feature-item"><span>✔</span> Gestão de Fidelidade Automática</div>
-            <div class="feature-item"><span>✔</span> Painel de agendamentos em tempo real</div>
-            <div class="feature-item"><span>✔</span> Notificações via WhatsApp</div>
+    <!-- Landing Page (SaaS Style) -->
+    <div id="pLanding" class="page active" style="text-align: center;">
+        <div style="margin-top: 60px;">
+            <h1 style="color:var(--gold); font-size: 38px; margin-bottom: 5px;">BarberSaaS</h1>
+            <span style="color:#666; letter-spacing: 3px;">PREMIUM EDITION</span>
         </div>
-        <div class="promo-box">
-            <h3 style="margin:0; color:var(--gold);">OFERTA DE LANÇAMENTO</h3>
-            <p style="margin:10px 0 0 0;">Cadastre-se hoje e ganhe <b>30 dias grátis</b>!</p>
+        <div style="margin: 40px 0;">
+            <div class="card" style="border-color: #333;">🚀 Gestão de Clientes via WhatsApp</div>
+            <div class="card" style="border-color: #333;">💎 Sistema de Fidelidade Automático</div>
+            <div class="card" style="border-color: #333;">📊 Dashboard de Faturamento Real-time</div>
         </div>
-        <button class="btn btn-gold" onclick="trocarTela('pAuth')">ACESSAR MEU PAINEL</button>
+        <button class="btn btn-gold" onclick="trocarTela('pAuth')">ENTRAR NO SISTEMA</button>
     </div>
 
-    <div id="pAgendar" class="page">
-        <h2 id="nomeBarbeariaAgendar" style="color:var(--gold); text-align:center;"></h2>
-        <div class="card">
-            <h3>Selecione os serviços:</h3>
-            <div id="listaServicosMultiplos" class="multi-select"></div>
-            <div class="total-box">Total: R$ <span id="valorTotalCliente">0.00</span></div>
-            <input type="text" id="cNome" placeholder="Seu Nome completo">
-            <input type="tel" id="cZap" placeholder="WhatsApp (DDD + Número)">
-            <input type="datetime-local" id="dataHoraAgendamento">
-            <button class="btn btn-gold" id="btnConfirmar" onclick="confirmarAgendamento()">FINALIZAR AGENDAMENTO</button>
-        </div>
-    </div>
-
+    <!-- Login -->
     <div id="pAuth" class="page">
-        <h1 style="color:var(--gold); text-align:center; margin-top: 50px;">BarberSaaS</h1>
+        <h2 style="text-align:center; margin-bottom:30px;">Acesso Restrito</h2>
         <div class="card">
-            <input type="email" id="uEmail" placeholder="E-mail">
-            <input type="password" id="uSenha" placeholder="Senha">
-            <button class="btn btn-gold" id="btnLogar" onclick="autenticar()">ENTRAR NO PAINEL</button>
-            <p style="text-align:center; cursor:pointer; font-size:16px; margin-top:15px;" onclick="trocarTela('pCadastro')"><b>Criar Nova Conta</b></p>
-            <p style="text-align:center; cursor:pointer; font-size:14px; color:#888;" onclick="trocarTela('pLanding')">Voltar ao Início</p>
+            <input type="email" id="uEmail" placeholder="Seu E-mail">
+            <input type="password" id="uSenha" placeholder="Sua Senha">
+            <button class="btn btn-gold" id="btnLogar" onclick="autenticar()">EFETUAR LOGIN</button>
+            <p style="text-align:center; font-size:14px; margin-top:20px;" onclick="trocarTela('pCadastro')">Novo aqui? <span style="color:var(--gold)">Cadastre sua Barbearia</span></p>
         </div>
     </div>
 
+    <!-- Cadastro -->
     <div id="pCadastro" class="page">
-        <h2 style="color:var(--gold); text-align:center;">Nova Conta</h2>
+        <h2 style="color:var(--gold); text-align:center;">Junte-se ao Time</h2>
         <div class="card">
             <input type="text" id="regNome" placeholder="Nome da Barbearia">
-            <input type="email" id="regEmail" placeholder="E-mail">
-            <input type="password" id="regSenha" placeholder="Senha">
-            <button class="btn btn-green" id="btnReg" onclick="registrarBarbeiro()">CADASTRAR</button>
-            <p style="text-align:center; cursor:pointer; font-size:16px; padding:10px;" onclick="trocarTela('pAuth')">Voltar</p>
+            <input type="email" id="regEmail" placeholder="E-mail de Acesso">
+            <input type="password" id="regSenha" placeholder="Crie uma Senha">
+            <button class="btn btn-green" onclick="registrarBarbeiro()">CRIAR MINHA CONTA</button>
+            <button class="btn" style="background:none; color:#888;" onclick="trocarTela('pAuth')">Voltar</button>
         </div>
     </div>
 
-    <div id="pMaster" class="page">
-        <h2 style="color:var(--gold); text-align:center;">👑 ADMINISTRADOR</h2>
-        <div id="listaBarbeirosMaster"></div>
-        <button class="btn btn-red" onclick="sair()">SAIR</button>
-    </div>
-
+    <!-- Painel do Barbeiro (O Pulo do Gato) -->
     <div id="pBarbeiro" class="page">
-        <h2 id="nomeDaBarbeariaExibicao" style="color:var(--gold); text-align:center;"></h2>
-        <div class="card dash-faturamento">
-            <div>
-                <h3 style="margin:0; font-size:14px; color:var(--white);">💰 FATURAMENTO ACUMULADO</h3>
-                <div class="txt-faturamento">R$ <span id="valFaturamento">0.00</span></div>
+        <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+            <h3 id="nomeDaBarbeariaExibicao" style="color:var(--gold); margin:0;"></h3>
+            <span style="color:var(--green); font-size:12px;">● Online</span>
+        </header>
+
+        <!-- DASHBOARD PROFISSIONAL -->
+        <div class="dash-container">
+            <div class="stat-card">
+                <span class="stat-label">Hoje</span>
+                <span class="stat-val" id="valFaturamento">0,00</span>
             </div>
-            <button class="btn-reset-fat" onclick="zerarFaturamento()">ZERAR 🗑️</button>
+            <div class="stat-card">
+                <span class="stat-label">Ticket Médio</span>
+                <span class="stat-val" id="valTicket">0,00</span>
+            </div>
         </div>
+
         <div class="card">
-            <h3>🔗 Seu Link</h3>
+            <h4 style="margin:0 0 10px 0;">🔗 Seu Link Profissional</h4>
             <code id="meuLink"></code>
+            <button class="btn" style="background:#1a1a1a; font-size:11px; padding:10px;" onclick="copiarLink()">COPIAR LINK</button>
         </div>
+
         <div class="card">
-            <h3>✂️ Meus Serviços</h3>
-            <div id="listaServicosBarbeiro"></div>
-            <input type="text" id="sNome" placeholder="Serviço">
-            <input type="number" id="sPreco" placeholder="R$">
-            <button class="btn btn-green" onclick="addServico()">ADICIONAR</button>
-        </div>
-        <div class="card">
-            <h3>📅 Próximos Agendamentos</h3>
+            <h3>📅 Agenda do Dia</h3>
             <div id="listaAgendamentos"></div>
-            <button class="btn btn-gold" onclick="carregarAgendamentos()" style="padding:12px; font-size:14px;">ATUALIZAR LISTA</button>
+            <button class="btn btn-gold" onclick="carregarAgendamentos()" style="margin-top:10px;">ATUALIZAR LISTA</button>
         </div>
-        <button class="btn btn-red" onclick="sair()">SAIR</button>
+
+        <div class="card">
+            <h3>✂️ Configurar Serviços</h3>
+            <div id="listaServicosBarbeiro" style="margin-bottom:15px;"></div>
+            <input type="text" id="sNome" placeholder="Ex: Corte Degradê">
+            <input type="number" id="sPreco" placeholder="Valor R$">
+            <button class="btn btn-green" onclick="addServico()">ADICIONAR SERVIÇO</button>
+        </div>
+
+        <button class="btn btn-red" onclick="sair()">SAIR DO SISTEMA</button>
+    </div>
+
+    <!-- Tela do Cliente (Agendamento) -->
+    <div id="pAgendar" class="page">
+        <h2 id="nomeBarbeariaAgendar" style="color:var(--gold); text-align:center;"></h2>
+        <p style="text-align:center; color:#888; font-size:14px; margin-bottom:25px;">Escolha seus serviços e horário abaixo</p>
+        
+        <div class="card">
+            <div id="listaServicosMultiplos"></div>
+            <div class="total-floating">R$ <span id="valorTotalCliente">0.00</span></div>
+            
+            <input type="text" id="cNome" placeholder="Seu Nome Completo">
+            <input type="tel" id="cZap" placeholder="Seu WhatsApp">
+            <label style="font-size:12px; color:var(--gold); margin-left:5px;">Data e Hora do Atendimento:</label>
+            <input type="datetime-local" id="dataHoraAgendamento">
+            
+            <button class="btn btn-gold" id="btnConfirmar" onclick="confirmarAgendamento()">RESERVAR MEU HORÁRIO</button>
+        </div>
     </div>
 
 <script>
+    // Configurações Supabase
     const _0x5a1 = "aHR0cHM6Ly9yZXJ1Y3B0b3hic2VuZnJvc2pncS5zdXBhYmFzZS5jbw==";
     const _0x5a2 = "c2JfcHVibGlzaGFibGVfTXVELW9WOGF5a3BKZ2Ryb0lRakV6d19La2liXzRZVw==";
-    const _0x5a3 = "ZWRpZ2l0YWw2MzJAZ21haWwuY29t";
-    const SEU_ZAP_ADMIN = "5579991073108"; 
-
     const URL_SB = atob(_0x5a1);
     const KEY_SB = atob(_0x5a2);
     const sb = window.supabase.createClient(URL_SB, KEY_SB);
     
     let logado_id = null;
-    let faturamentoDia = 0;
+    let cortesConcluidosNoDia = 0;
     const barbeiro_alvo_id = new URLSearchParams(window.location.search).get('id');
 
     window.onload = async () => {
-        const salvo = localStorage.getItem('faturamento_barber');
-        if(salvo) faturamentoDia = parseFloat(salvo);
-        document.getElementById('valFaturamento').innerText = faturamentoDia.toFixed(2);
+        // Recuperar faturamento salvo
+        const salvoFat = localStorage.getItem('faturamento_barber') || 0;
+        const salvoCortes = localStorage.getItem('cortes_hoje') || 0;
+        atualizarDash(parseFloat(salvoFat), parseInt(salvoCortes));
 
         if(barbeiro_alvo_id) {
-            const { data } = await sb.from('perfil_barbeiro').select('*').eq('id', barbeiro_alvo_id).maybeSingle();
-            if(data && data.status_pagamento !== 'Ativo') {
-                document.body.innerHTML = "<div style='color:white; text-align:center; padding:50px;'><h2>Esta barbearia está temporariamente indisponível.</h2></div>";
-                return;
-            }
-            if(data) {
+            const { data } = await sb.from('perfil_barbeiro').select('nome_salao, status_pagamento').eq('id', barbeiro_alvo_id).maybeSingle();
+            if(data && data.status_pagamento === 'Ativo') {
                 document.getElementById('nomeBarbeariaAgendar').innerText = data.nome_salao;
                 trocarTela('pAgendar');
                 carregarServicosParaCliente();
+            } else {
+                document.body.innerHTML = "<div style='color:white; text-align:center; padding-top:100px;'><h3>Barbearia Indisponível</h3></div>";
             }
         }
     };
 
-    // FUNÇÃO REAJUSTADA PARA ELIMINAR O PROTOCOLO WHATSAPP:// QUE DÁ O ERRO
-    function avisarNoZap(tel, nome, servico, data) {
-        const msg = `Olá ${nome}! Seu horário para ${servico} em ${new Date(data).toLocaleString()} está confirmado!`;
-        
-        // Usamos APENAS HTTPS:// para o Kodular não pensar que é um erro de esquema
-        const linkHttps = "https://wa.me/55" + tel + "?text=" + encodeURIComponent(msg);
-        
-        // Em vez de window.location, usamos window.open com '_blank' para forçar a saída do WebView
-        window.open(linkHttps, '_blank');
+    function atualizarDash(fat, cortes) {
+        document.getElementById('valFaturamento').innerText = "R$ " + fat.toFixed(2);
+        const ticket = cortes > 0 ? fat / cortes : 0;
+        document.getElementById('valTicket').innerText = "R$ " + ticket.toFixed(2);
     }
 
+    function avisarNoZap(tel, nome, servico, data) {
+        const msg = `*CONFIRMAÇÃO BARBERSAAS*\n\nOlá *${nome}*! seu horário para *${servico}* está confirmado.\n\n📅 Data: ${new Date(data).toLocaleString()}\n\n_Esperamos você!_`;
+        const linkHttps = "https://wa.me/55" + tel.replace(/\D/g, '') + "?text=" + encodeURIComponent(msg);
+        
+        // Comando para abrir externamente no Kodular (via target _system)
+        const a = document.createElement('a');
+        a.href = linkHttps;
+        a.target = '_system';
+        a.click();
+    }
+
+    async function finalizarAgendamento(id, precoStr, zap, nomeCliente) {
+        if(confirm(`Concluir atendimento de ${nomeCliente}?`)) {
+            const valor = parseFloat(precoStr.split('R$ ')[1]) || 0;
+            
+            // Atualizar Dashboard
+            let fatAtual = parseFloat(localStorage.getItem('faturamento_barber') || 0) + valor;
+            let cortesAtual = parseInt(localStorage.getItem('cortes_hoje') || 0) + 1;
+            localStorage.setItem('faturamento_barber', fatAtual);
+            localStorage.setItem('cortes_hoje', cortesAtual);
+            atualizarDash(fatAtual, cortesAtual);
+
+            // Sistema de Fidelidade Real no Banco
+            try {
+                const { data: fid } = await sb.from('fidelidade_clientes').select('*').eq('barbeiro_id', logado_id).eq('cliente_zap', zap).maybeSingle();
+                if(fid) {
+                    await sb.from('fidelidade_clientes').update({ total_cortes: fid.total_cortes + 1 }).eq('id', fid.id);
+                } else {
+                    await sb.from('fidelidade_clientes').insert([{ barbeiro_id: logado_id, cliente_zap: zap, total_cortes: 1, cliente_nome: nomeCliente }]);
+                }
+            } catch(e) {}
+
+            await sb.from('agendamentos').delete().eq('id', id);
+            carregarAgendamentos();
+        }
+    }
+
+    async function carregarAgendamentos() {
+        const { data } = await sb.from('agendamentos').select('*').eq('barbeiro_id', logado_id).order('data_hora', { ascending: true });
+        const listContainer = document.getElementById('listaAgendamentos');
+        
+        if(data && data.length > 0) {
+            let html = '';
+            for (const a of data) {
+                // Busca se esse cliente é fiel
+                const { data: f } = await sb.from('fidelidade_clientes').select('total_cortes').eq('cliente_zap', a.cliente_zap).maybeSingle();
+                const badge = f ? `<span class="fidelidade-badge">💎 CLIENTE FIEL (${f.total_cortes}x)</span>` : '';
+                
+                html += `<div class="card" style="border-left: 5px solid var(--gold);">
+                    ${badge}<br>
+                    <b>${a.cliente_nome}</b><br>
+                    <small>⏰ ${new Date(a.data_hora).toLocaleString()}</small><br>
+                    <small style="color:var(--gold)">${a.comentario_cliente}</small>
+                    <div style="display:flex; gap:10px; margin-top:15px;">
+                        <button class="btn btn-green" style="padding:8px; font-size:10px;" onclick="finalizarAgendamento('${a.id}','${a.comentario_cliente}','${a.cliente_zap}','${a.cliente_nome}')">CONCLUÍDO ✅</button>
+                        <button class="btn" style="padding:8px; font-size:10px; background:#25d366; color:white;" onclick="avisarNoZap('${a.cliente_zap}','${a.cliente_nome}','${a.comentario_cliente}','${a.data_hora}')">ZAP 📱</button>
+                    </div>
+                </div>`;
+            }
+            listContainer.innerHTML = html;
+        } else {
+            listContainer.innerHTML = "<p style='text-align:center; color:#666;'>Nenhum agendamento para hoje.</p>";
+        }
+    }
+
+    function copiarLink() {
+        const link = document.getElementById('meuLink').innerText;
+        navigator.clipboard.writeText(link);
+        alert("Link copiado! Envie para seus clientes.");
+    }
+
+    // --- FUNÇÕES DE NAVEGAÇÃO E BASE (MANTIDAS) ---
     async function autenticar() {
         const e = document.getElementById('uEmail').value;
         const s = document.getElementById('uSenha').value;
         const { data } = await sb.from('perfil_barbeiro').select('*').eq('email', e).eq('senha', s).maybeSingle();
-        
         if (data) {
-            if (data.email === atob(_0x5a3)) { trocarTela('pMaster'); carregarMaster(); return; }
-            if (data.status_pagamento !== 'Ativo') { 
-                alert("Acesso inativo. Contatando suporte...");
-                avisarNoZap(SEU_ZAP_ADMIN, "Suporte", "Ativação de Conta", new Date());
-                return; 
-            }
             logado_id = data.id;
-            document.getElementById('nomeDaBarbeariaExibicao').innerText = data.nome_salao.toUpperCase();
+            document.getElementById('nomeDaBarbeariaExibicao').innerText = data.nome_salao;
             document.getElementById('meuLink').innerText = window.location.origin + window.location.pathname + "?id=" + data.id;
             trocarTela('pBarbeiro'); carregarServicos(); carregarAgendamentos();
-        } else { alert("Dados incorretos."); }
+        } else { alert("Login Inválido!"); }
     }
 
-    function trocarTela(id) { 
-        document.querySelectorAll('.page').forEach(p => { p.classList.remove('active'); p.style.display = 'none'; });
-        const target = document.getElementById(id);
-        target.classList.add('active');
-        target.style.display = 'block';
-        window.scrollTo(0,0); 
+    function trocarTela(id) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        window.scrollTo(0,0);
     }
 
-    async function confirmarAgendamento() { const n = document.getElementById('cNome').value; const z = document.getElementById('cZap').value.replace(/\D/g, ''); const d = document.getElementById('dataHoraAgendamento').value; const v = document.getElementById('valorTotalCliente').innerText; const marcados = document.querySelectorAll('input[name="servicoCheck"]:checked'); let servicosEscolhidos = []; marcados.forEach(check => servicosEscolhidos.push(check.value)); if(servicosEscolhidos.length === 0 || !n || !d || !z) return alert("Preencha todos os campos."); await sb.from('agendamentos').insert([{ cliente_nome: n, cliente_zap: z, data_hora: d, barbeiro_id: barbeiro_alvo_id, comentario_cliente: `R$ ${v} (${servicosEscolhidos.join("+")})` }]); alert("Agendamento realizado!"); location.reload(); }
-    async function finalizarAgendamento(id, precoStr, zap) { if(confirm("Atendimento concluído?")) { const valor = parseFloat(precoStr.replace('R$ ', '')) || 0; faturamentoDia += valor; localStorage.setItem('faturamento_barber', faturamentoDia); document.getElementById('valFaturamento').innerText = faturamentoDia.toFixed(2); try { const { data: fid } = await sb.from('fidelidade_clientes').select('*').eq('barbeiro_id', logado_id).eq('cliente_zap', zap).maybeSingle(); if(fid) { await sb.from('fidelidade_clientes').update({ total_cortes: fid.total_cortes + 1 }).eq('id', fid.id); } else { await sb.from('fidelidade_clientes').insert([{ barbeiro_id: logado_id, cliente_zap: zap, total_cortes: 1 }]); } } catch(e) {} await sb.from('agendamentos').delete().eq('id', id); carregarAgendamentos(); } }
-    async function carregarAgendamentos() { const { data } = await sb.from('agendamentos').select('*').eq('barbeiro_id', logado_id).order('data_hora', { ascending: true }); if(data) { document.getElementById('listaAgendamentos').innerHTML = data.map(a => `<div class="card" style="border-left:4px solid var(--gold);"><div class="agendamento-header"><div class="cliente-info"><b>👤 ${a.cliente_nome}</b><br><small>📅 ${new Date(a.data_hora).toLocaleString()}</small><br><small style="color:var(--gold)">${a.comentario_cliente}</small><br><button class="btn-zap" onclick="avisarNoZap('${a.cliente_zap}','${a.cliente_nome}','${a.comentario_cliente}','${a.data_hora}')">NOTIFICAR WHATSAPP 📱</button></div><button class="btn-check-clear" onclick="finalizarAgendamento('${a.id}', '${a.comentario_cliente}', '${a.cliente_zap}')">FINALIZAR ✅</button></div></div>`).join(''); } }
-    async function deletarBarbeiro(id) { if(confirm("Excluir?")) { await sb.from('servicos').delete().eq('barbeiro_id', id); await sb.from('fidelidade_clientes').delete().eq('barbeiro_id', id); await sb.from('agendamentos').delete().eq('barbeiro_id', id); await sb.from('perfil_barbeiro').delete().eq('id', id); carregarMaster(); } }
-    async function registrarBarbeiro() { const n = document.getElementById('regNome').value; const e = document.getElementById('regEmail').value; const s = document.getElementById('regSenha').value; const d = new Date(); d.setDate(d.getDate() + 30); await sb.from('perfil_barbeiro').insert([{ nome_salao: n, email: e, senha: s, status_pagamento: 'Ativo', data_expiracao: d.toISOString() }]); alert("Cadastrado!"); trocarTela('pAuth'); }
-    function atualizarSoma() { let t = 0; document.querySelectorAll('input[name="servicoCheck"]:checked').forEach(i => t += parseFloat(i.getAttribute('data-preco'))); document.getElementById('valorTotalCliente').innerText = t.toFixed(2); }
-    async function carregarServicosParaCliente() { const { data } = await sb.from('servicos').select('*').eq('barbeiro_id', barbeiro_alvo_id); if(data) document.getElementById('listaServicosMultiplos').innerHTML = data.map(s => `<div class="item-servico"><input type="checkbox" name="servicoCheck" value="${s.nome}" data-preco="${s.preco}" onchange="atualizarSoma()"><label>${s.nome} - R$ ${s.preco}</label></div>`).join(''); }
-    async function carregarMaster() { const { data } = await sb.from('perfil_barbeiro').select('*').neq('email', atob(_0x5a3)); if(data) document.getElementById('listaBarbeirosMaster').innerHTML = data.map(b => `<div class="card"><button class="btn-del" onclick="deletarBarbeiro('${b.id}')">🗑️</button><b>${b.nome_salao}</b><br><button class="btn btn-gold" onclick="mudarStatus('${b.id}', '${b.status_pagamento}')">${b.status_pagamento}</button></div>`).join(''); }
-    async function mudarStatus(id, atual) { const n = atual === 'Ativo' ? 'Inativo' : 'Ativo'; await sb.from('perfil_barbeiro').update({ status_pagamento: n }).eq('id', id); carregarMaster(); }
-    async function carregarServicos() { const { data } = await sb.from('servicos').select('*').eq('barbeiro_id', logado_id); if(data) document.getElementById('listaServicosBarbeiro').innerHTML = data.map(s => `<div style="display:flex; justify-content:space-between; margin-bottom:8px;"><span>${s.nome} - R$ ${s.preco}</span><span style="color:red; cursor:pointer;" onclick="deletarServico('${s.id}')"> [Remover]</span></div>`).join(''); }
-    async function deletarServico(id) { await sb.from('servicos').delete().eq('id', id); carregarServicos(); }
-    async function addServico() { await sb.from('servicos').insert([{ nome: document.getElementById('sNome').value, preco: document.getElementById('sPreco').value, barbeiro_id: logado_id }]); carregarServicos(); }
+    async function registrarBarbeiro() {
+        const n = document.getElementById('regNome').value;
+        const e = document.getElementById('regEmail').value;
+        const s = document.getElementById('regSenha').value;
+        const d = new Date(); d.setDate(d.getDate() + 30);
+        await sb.from('perfil_barbeiro').insert([{ nome_salao: n, email: e, senha: s, status_pagamento: 'Ativo', data_expiracao: d.toISOString() }]);
+        alert("Barbearia cadastrada com sucesso!"); trocarTela('pAuth');
+    }
+
+    async function carregarServicosParaCliente() {
+        const { data } = await sb.from('servicos').select('*').eq('barbeiro_id', barbeiro_alvo_id);
+        if(data) document.getElementById('listaServicosMultiplos').innerHTML = data.map(s => `<div class="item-servico"><input type="checkbox" name="servicoCheck" value="${s.nome}" data-preco="${s.preco}" onchange="atualizarSoma()"><label>${s.nome} <br> <span style="color:var(--gold)">R$ ${s.preco}</span></label></div>`).join('');
+    }
+
+    function atualizarSoma() {
+        let t = 0;
+        document.querySelectorAll('input[name="servicoCheck"]:checked').forEach(i => t += parseFloat(i.getAttribute('data-preco')));
+        document.getElementById('valorTotalCliente').innerText = t.toFixed(2);
+    }
+
+    async function confirmarAgendamento() {
+        const n = document.getElementById('cNome').value;
+        const z = document.getElementById('cZap').value;
+        const d = document.getElementById('dataHoraAgendamento').value;
+        const v = document.getElementById('valorTotalCliente').innerText;
+        const marcados = document.querySelectorAll('input[name="servicoCheck"]:checked');
+        let servs = []; marcados.forEach(c => servs.push(c.value));
+        if(!n || !d || servs.length === 0) return alert("Preencha tudo!");
+        await sb.from('agendamentos').insert([{ cliente_nome: n, cliente_zap: z, data_hora: d, barbeiro_id: barbeiro_alvo_id, comentario_cliente: `R$ ${v} (${servs.join(", ")})` }]);
+        alert("Agendamento Confirmado! O barbeiro te espera.");
+        location.reload();
+    }
+
+    async function carregarServicos() {
+        const { data } = await sb.from('servicos').select('*').eq('barbeiro_id', logado_id);
+        if(data) document.getElementById('listaServicosBarbeiro').innerHTML = data.map(s => `<div style="display:flex; justify-content:space-between; padding:5px; border-bottom:1px solid #222;"><span>${s.nome}</span> <b>R$ ${s.preco}</b></div>`).join('');
+    }
+
+    async function addServico() {
+        const n = document.getElementById('sNome').value;
+        const p = document.getElementById('sPreco').value;
+        await sb.from('servicos').insert([{ nome: n, preco: p, barbeiro_id: logado_id }]);
+        carregarServicos();
+    }
+
     function sair() { window.location.search = ""; window.location.reload(); }
-    function zerarFaturamento() { if(confirm("Zerar?")) { faturamentoDia = 0; localStorage.setItem('faturamento_barber', 0); document.getElementById('valFaturamento').innerText = "0.00"; } }
 </script>
 </body>
 </html>
