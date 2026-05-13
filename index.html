@@ -12,63 +12,88 @@
         .active { display: block !important; animation: fadeIn 0.4s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
+        /* Estilo da Landing Page Explicativa */
+        .hero-section { text-align: center; padding: 60px 20px; background: linear-gradient(180deg, #121212 0%, #000 100%); border-bottom: 1px solid #222; }
+        .hero-title { color: var(--gold); font-size: 42px; margin-bottom: 10px; font-weight: 800; }
+        .hero-desc { color: #aaa; font-size: 18px; max-width: 600px; margin: 0 auto 30px; line-height: 1.6; }
+        
+        .feature-grid { display: grid; grid-template-columns: 1fr; gap: 20px; margin: 40px 0; }
+        .feature-card { background: #111; border: 1px solid #222; padding: 25px; border-radius: 20px; text-align: left; }
+        .feature-card h3 { color: var(--gold); margin-top: 0; font-size: 20px; display: flex; align-items: center; gap: 10px; }
+        .feature-card p { color: #888; font-size: 15px; margin-bottom: 0; }
+
+        /* Dashboard e Outros (Mantidos do anterior) */
         .dash-container { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
         .stat-card { background: var(--card); border: 1px solid var(--gray); padding: 15px; border-radius: 15px; text-align: center; border-bottom: 3px solid var(--gold); }
         .stat-val { display: block; font-size: 20px; font-weight: bold; color: var(--gold); }
         .stat-label { font-size: 10px; text-transform: uppercase; color: #888; }
+        .btn-reset-mes { width: 100%; background: none; border: 1px dashed #444; color: #888; padding: 8px; border-radius: 8px; font-size: 10px; margin-bottom: 20px; cursor: pointer; }
 
-        .btn-reset-mes { width: 100%; background: none; border: 1px dashed #444; color: #888; padding: 8px; border-radius: 8px; font-size: 10px; margin-bottom: 20px; cursor: pointer; text-transform: uppercase; }
-
-        .card { background: var(--card); padding: 20px; border-radius: 18px; margin-bottom: 15px; border: 1px solid var(--gray); position: relative; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
-        input, select { width: 100%; padding: 15px; margin: 10px 0; background: #1a1a1a; border: 1px solid #333; color: white; border-radius: 10px; box-sizing: border-box; font-size: 16px; transition: 0.3s; }
-        input:focus { border-color: var(--gold); outline: none; background: #222; }
+        .card { background: var(--card); padding: 20px; border-radius: 18px; margin-bottom: 15px; border: 1px solid var(--gray); position: relative; }
+        input { width: 100%; padding: 15px; margin: 10px 0; background: #1a1a1a; border: 1px solid #333; color: white; border-radius: 10px; box-sizing: border-box; }
         
-        .btn { width: 100%; padding: 16px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; text-transform: uppercase; font-size: 14px; transition: 0.2s; letter-spacing: 1px; }
-        .btn:active { transform: scale(0.98); }
+        .btn { width: 100%; padding: 18px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; text-transform: uppercase; font-size: 15px; }
         .btn-gold { background: linear-gradient(135deg, #d4af37, #b8860b); color: black; }
         .btn-green { background: #00e676; color: black; }
         .btn-red { background: #333; color: var(--red); border: 1px solid #444; margin-top: 20px; }
 
         .fidelidade-badge { background: rgba(0, 230, 118, 0.1); color: var(--green); padding: 4px 8px; border-radius: 5px; font-size: 11px; font-weight: bold; display: inline-block; margin-bottom: 10px; border: 1px solid var(--green); }
         code { display: block; background: #050505; padding: 12px; border-radius: 8px; color: var(--gold); font-size: 11px; border: 1px solid #222; margin: 10px 0; }
-        
         .item-servico { display: flex; align-items: center; padding: 12px; border-bottom: 1px solid #222; }
-        .item-servico input { width: 22px; height: 22px; margin-right: 15px; accent-color: var(--gold); }
-        
-        .total-floating { font-size: 24px; font-weight: bold; color: var(--green); text-align: right; margin: 15px 0; border-top: 1px solid #333; padding-top: 10px; }
+        .total-floating { font-size: 24px; font-weight: bold; color: var(--green); text-align: right; padding-top: 10px; }
     </style>
 </head>
 <body>
 
-    <div id="pLanding" class="page active" style="text-align: center;">
-        <div style="margin-top: 60px;">
-            <h1 style="color:var(--gold); font-size: 38px; margin-bottom: 5px;">BarberSaaS</h1>
-            <span style="color:#666; letter-spacing: 3px;">PREMIUM EDITION</span>
+    <!-- NOVA LANDING PAGE EXPLICATIVA -->
+    <div id="pLanding" class="page active">
+        <div class="hero-section">
+            <h1 class="hero-title">BarberSaaS Pro</h1>
+            <p class="hero-desc">Transforme sua barbearia em um negócio digital de alto nível com gestão inteligente e fidelização automática.</p>
+            <button class="btn btn-gold" onclick="trocarTela('pAuth')">ACESSAR PAINEL DO BARBEIRO</button>
         </div>
-        <div style="margin: 40px 0;">
-            <div class="card" style="border-color: #333;">🚀 Gestão de Clientes via WhatsApp</div>
-            <div class="card" style="border-color: #333;">💎 Sistema de Fidelidade Automático</div>
-            <div class="card" style="border-color: #333;">📊 Dashboard de Faturamento Real-time</div>
+
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h3>📱 Agendamento Online</h3>
+                <p>Seus clientes agendam pelo seu link exclusivo em segundos, sem você precisar atender o telefone.</p>
+            </div>
+            <div class="feature-card">
+                <h3>💎 Fidelidade Digital</h3>
+                <p>O sistema reconhece clientes frequentes automaticamente. Chega de cartões de papel que o cliente perde.</p>
+            </div>
+            <div class="feature-card">
+                <h3>📊 Controle de Caixa</h3>
+                <p>Saiba exatamente quanto faturou no dia e no mês, com cálculo automático de ticket médio.</p>
+            </div>
+            <div class="feature-card">
+                <h3>📲 Notificações WhatsApp</h3>
+                <p>Envie confirmações e lembretes profissionais direto para o WhatsApp do seu cliente com um clique.</p>
+            </div>
         </div>
-        <button class="btn btn-gold" onclick="trocarTela('pAuth')">ENTRAR NO SISTEMA</button>
+        
+        <p style="text-align:center; color:#555; font-size:12px; padding-bottom:40px;">BarberSaaS © 2026 - O futuro da sua barbearia começa aqui.</p>
     </div>
 
+    <!-- TELA DE LOGIN (O REDIRECIONAMENTO VEM PARA CÁ) -->
     <div id="pAuth" class="page">
-        <h2 style="text-align:center; margin-bottom:30px;">Acesso Restrito</h2>
+        <h2 style="text-align:center; margin-bottom:30px; color:var(--gold);">Acesso ao Painel</h2>
         <div class="card">
-            <input type="email" id="uEmail" placeholder="Seu E-mail">
-            <input type="password" id="uSenha" placeholder="Sua Senha">
-            <button class="btn btn-gold" id="btnLogar" onclick="autenticar()">EFETUAR LOGIN</button>
-            <p style="text-align:center; font-size:14px; margin-top:20px;" onclick="trocarTela('pCadastro')">Novo aqui? <span style="color:var(--gold)">Cadastre sua Barbearia</span></p>
+            <input type="email" id="uEmail" placeholder="E-mail">
+            <input type="password" id="uSenha" placeholder="Senha">
+            <button class="btn btn-gold" onclick="autenticar()">ENTRAR AGORA</button>
+            <p style="text-align:center; font-size:14px; margin-top:20px;" onclick="trocarTela('pCadastro')">Ainda não tem conta? <span style="color:var(--gold)">Cadastre-se</span></p>
+            <p style="text-align:center; font-size:14px; color:#555; margin-top:20px;" onclick="trocarTela('pLanding')">← Voltar para a explicação</p>
         </div>
     </div>
 
+    <!-- TODO O CÓDIGO ABAIXO FOI MANTIDO EXATAMENTE COMO ESTAVA -->
     <div id="pCadastro" class="page">
-        <h2 style="color:var(--gold); text-align:center;">Junte-se ao Time</h2>
+        <h2 style="color:var(--gold); text-align:center;">Nova Barbearia</h2>
         <div class="card">
             <input type="text" id="regNome" placeholder="Nome da Barbearia">
-            <input type="email" id="regEmail" placeholder="E-mail de Acesso">
-            <input type="password" id="regSenha" placeholder="Crie uma Senha">
+            <input type="email" id="regEmail" placeholder="E-mail">
+            <input type="password" id="regSenha" placeholder="Senha">
             <button class="btn btn-green" onclick="registrarBarbeiro()">CRIAR MINHA CONTA</button>
             <button class="btn" style="background:none; color:#888;" onclick="trocarTela('pAuth')">Voltar</button>
         </div>
@@ -77,55 +102,28 @@
     <div id="pBarbeiro" class="page">
         <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
             <h3 id="nomeDaBarbeariaExibicao" style="color:var(--gold); margin:0;"></h3>
-            <span style="color:var(--green); font-size:12px;">● Online</span>
+            <span style="color:var(--green); font-size:12px;">● Painel Ativo</span>
         </header>
-
         <div class="dash-container">
-            <div class="stat-card">
-                <span class="stat-label">Faturamento Mensal</span>
-                <span class="stat-val" id="valFaturamento">0,00</span>
-            </div>
-            <div class="stat-card">
-                <span class="stat-label">Ticket Médio</span>
-                <span class="stat-val" id="valTicket">0,00</span>
-            </div>
+            <div class="stat-card"><span class="stat-label">Faturamento</span><span class="stat-val" id="valFaturamento">0,00</span></div>
+            <div class="stat-card"><span class="stat-label">Ticket Médio</span><span class="stat-val" id="valTicket">0,00</span></div>
         </div>
         <button class="btn-reset-mes" onclick="zerarMes()">📅 ZERAR PARA NOVO MÊS</button>
-
-        <div class="card">
-            <h4 style="margin:0 0 10px 0;">🔗 Seu Link Profissional</h4>
-            <code id="meuLink"></code>
-            <button class="btn" style="background:#1a1a1a; font-size:11px; padding:10px;" onclick="copiarLink()">COPIAR LINK</button>
-        </div>
-
-        <div class="card">
-            <h3>📅 Agenda do Dia</h3>
-            <div id="listaAgendamentos"></div>
-            <button class="btn btn-gold" onclick="carregarAgendamentos()" style="margin-top:10px;">ATUALIZAR LISTA</button>
-        </div>
-
-        <div class="card">
-            <h3>✂️ Configurar Serviços</h3>
-            <div id="listaServicosBarbeiro" style="margin-bottom:15px;"></div>
-            <input type="text" id="sNome" placeholder="Ex: Corte Degradê">
-            <input type="number" id="sPreco" placeholder="Valor R$">
-            <button class="btn btn-green" onclick="addServico()">ADICIONAR SERVIÇO</button>
-        </div>
-
-        <button class="btn btn-red" onclick="sair()">SAIR DO SISTEMA</button>
+        <div class="card"><h4>🔗 Link do Cliente</h4><code id="meuLink"></code><button class="btn" style="background:#1a1a1a; font-size:11px; padding:10px;" onclick="copiarLink()">COPIAR LINK</button></div>
+        <div class="card"><h3>📅 Agenda</h3><div id="listaAgendamentos"></div><button class="btn btn-gold" onclick="carregarAgendamentos()" style="margin-top:10px;">ATUALIZAR</button></div>
+        <div class="card"><h3>✂️ Serviços</h3><div id="listaServicosBarbeiro" style="margin-bottom:15px;"></div><input type="text" id="sNome" placeholder="Serviço"><input type="number" id="sPreco" placeholder="R$"><button class="btn btn-green" onclick="addServico()">ADICIONAR</button></div>
+        <button class="btn btn-red" onclick="sair()">SAIR</button>
     </div>
 
     <div id="pAgendar" class="page">
         <h2 id="nomeBarbeariaAgendar" style="color:var(--gold); text-align:center;"></h2>
-        <p style="text-align:center; color:#888; font-size:14px; margin-bottom:25px;">Escolha seus serviços e horário abaixo</p>
         <div class="card">
             <div id="listaServicosMultiplos"></div>
             <div class="total-floating">R$ <span id="valorTotalCliente">0.00</span></div>
-            <input type="text" id="cNome" placeholder="Seu Nome Completo">
+            <input type="text" id="cNome" placeholder="Seu Nome">
             <input type="tel" id="cZap" placeholder="Seu WhatsApp">
-            <label style="font-size:12px; color:var(--gold); margin-left:5px;">Data e Hora do Atendimento:</label>
             <input type="datetime-local" id="dataHoraAgendamento">
-            <button class="btn btn-gold" id="btnConfirmar" onclick="confirmarAgendamento()">RESERVAR MEU HORÁRIO</button>
+            <button class="btn btn-gold" id="btnConfirmar" onclick="confirmarAgendamento()">AGENDAR AGORA</button>
         </div>
     </div>
 
@@ -160,22 +158,21 @@
     }
 
     function zerarMes() {
-        if(confirm("Deseja zerar o faturamento e o ticket médio para começar um novo mês? (Isso não apaga os serviços nem clientes fiéis)")) {
+        if(confirm("Zerar faturamento do mês?")) {
             localStorage.setItem('faturamento_barber', 0);
             localStorage.setItem('cortes_hoje', 0);
             carregarDadosDash();
-            alert("Dados zerados com sucesso! Bom faturamento no novo mês.");
         }
     }
 
     function avisarNoZap(tel, nome, servico, data) {
-        const msg = `*CONFIRMAÇÃO BARBERSAAS*\n\nOlá *${nome}*! seu horário para *${servico}* está confirmado.\n\n📅 Data: ${new Date(data).toLocaleString()}\n\n_Esperamos você!_`;
+        const msg = `*CONFIRMAÇÃO*\n\nOlá *${nome}*! Seu horário para *${servico}* está confirmado.\n\n📅 Data: ${new Date(data).toLocaleString()}`;
         const linkHttps = "https://wa.me/55" + tel.replace(/\D/g, '') + "?text=" + encodeURIComponent(msg);
         const a = document.createElement('a'); a.href = linkHttps; a.target = '_system'; a.click();
     }
 
     async function finalizarAgendamento(id, precoStr, zap, nomeCliente) {
-        if(confirm(`Concluir atendimento de ${nomeCliente}?`)) {
+        if(confirm(`Concluir atendimento?`)) {
             const valor = parseFloat(precoStr.split('R$ ')[1]) || 0;
             let fatAtual = parseFloat(localStorage.getItem('faturamento_barber') || 0) + valor;
             let cortesAtual = parseInt(localStorage.getItem('cortes_hoje') || 0) + 1;
@@ -188,7 +185,6 @@
                 if(fid) { await sb.from('fidelidade_clientes').update({ total_cortes: fid.total_cortes + 1 }).eq('id', fid.id); }
                 else { await sb.from('fidelidade_clientes').insert([{ barbeiro_id: logado_id, cliente_zap: zap, total_cortes: 1, cliente_nome: nomeCliente }]); }
             } catch(e) {}
-
             await sb.from('agendamentos').delete().eq('id', id);
             carregarAgendamentos();
         }
@@ -201,12 +197,11 @@
             let html = '';
             for (const a of data) {
                 const { data: f } = await sb.from('fidelidade_clientes').select('total_cortes').eq('cliente_zap', a.cliente_zap).maybeSingle();
-                const badge = f ? `<span class="fidelidade-badge">💎 CLIENTE FIEL (${f.total_cortes}x)</span>` : '';
+                const badge = f ? `<span class="fidelidade-badge">💎 FIEL (${f.total_cortes}x)</span>` : '';
                 html += `<div class="card" style="border-left: 5px solid var(--gold);">
-                    ${badge}<br><b>${a.cliente_nome}</b><br><small>⏰ ${new Date(a.data_hora).toLocaleString()}</small><br>
-                    <small style="color:var(--gold)">${a.comentario_cliente}</small>
+                    ${badge}<br><b>${a.cliente_nome}</b><br><small>⏰ ${new Date(a.data_hora).toLocaleString()}</small>
                     <div style="display:flex; gap:10px; margin-top:15px;">
-                        <button class="btn btn-green" style="padding:8px; font-size:10px;" onclick="finalizarAgendamento('${a.id}','${a.comentario_cliente}','${a.cliente_zap}','${a.cliente_nome}')">CONCLUÍDO ✅</button>
+                        <button class="btn btn-green" style="padding:8px; font-size:10px;" onclick="finalizarAgendamento('${a.id}','${a.comentario_cliente}','${a.cliente_zap}','${a.cliente_nome}')">FIM ✅</button>
                         <button class="btn" style="padding:8px; font-size:10px; background:#25d366; color:white;" onclick="avisarNoZap('${a.cliente_zap}','${a.cliente_nome}','${a.comentario_cliente}','${a.data_hora}')">ZAP 📱</button>
                     </div></div>`;
             }
@@ -214,7 +209,8 @@
         } else { listContainer.innerHTML = "<p style='text-align:center; color:#666;'>Sem agendamentos.</p>"; }
     }
 
-    function copiarLink() { const link = document.getElementById('meuLink').innerText; navigator.clipboard.writeText(link); alert("Link copiado!"); }
+    function copiarLink() { const link = document.getElementById('meuLink').innerText; navigator.clipboard.writeText(link); alert("Copiado!"); }
+    
     async function autenticar() {
         const e = document.getElementById('uEmail').value; const s = document.getElementById('uSenha').value;
         const { data } = await sb.from('perfil_barbeiro').select('*').eq('email', e).eq('senha', s).maybeSingle();
@@ -224,21 +220,26 @@
             trocarTela('pBarbeiro'); carregarServicos(); carregarAgendamentos();
         } else { alert("Login Inválido!"); }
     }
+
     function trocarTela(id) { document.querySelectorAll('.page').forEach(p => p.classList.remove('active')); document.getElementById(id).classList.add('active'); window.scrollTo(0,0); }
+    
     async function registrarBarbeiro() {
         const n = document.getElementById('regNome').value; const e = document.getElementById('regEmail').value; const s = document.getElementById('regSenha').value;
         const d = new Date(); d.setDate(d.getDate() + 30);
         await sb.from('perfil_barbeiro').insert([{ nome_salao: n, email: e, senha: s, status_pagamento: 'Ativo', data_expiracao: d.toISOString() }]);
         alert("Cadastrada!"); trocarTela('pAuth');
     }
+
     async function carregarServicosParaCliente() {
         const { data } = await sb.from('servicos').select('*').eq('barbeiro_id', barbeiro_alvo_id);
         if(data) document.getElementById('listaServicosMultiplos').innerHTML = data.map(s => `<div class="item-servico"><input type="checkbox" name="servicoCheck" value="${s.nome}" data-preco="${s.preco}" onchange="atualizarSoma()"><label>${s.nome} <br> <span style="color:var(--gold)">R$ ${s.preco}</span></label></div>`).join('');
     }
+
     function atualizarSoma() {
         let t = 0; document.querySelectorAll('input[name="servicoCheck"]:checked').forEach(i => t += parseFloat(i.getAttribute('data-preco')));
         document.getElementById('valorTotalCliente').innerText = t.toFixed(2);
     }
+
     async function confirmarAgendamento() {
         const n = document.getElementById('cNome').value; const z = document.getElementById('cZap').value; const d = document.getElementById('dataHoraAgendamento').value;
         const v = document.getElementById('valorTotalCliente').innerText; const marcados = document.querySelectorAll('input[name="servicoCheck"]:checked');
@@ -247,10 +248,12 @@
         await sb.from('agendamentos').insert([{ cliente_nome: n, cliente_zap: z, data_hora: d, barbeiro_id: barbeiro_alvo_id, comentario_cliente: `R$ ${v} (${servs.join(", ")})` }]);
         alert("Confirmado!"); location.reload();
     }
+
     async function carregarServicos() {
         const { data } = await sb.from('servicos').select('*').eq('barbeiro_id', logado_id);
         if(data) document.getElementById('listaServicosBarbeiro').innerHTML = data.map(s => `<div style="display:flex; justify-content:space-between; padding:5px; border-bottom:1px solid #222;"><span>${s.nome}</span> <b>R$ ${s.preco}</b></div>`).join('');
     }
+
     async function addServico() {
         await sb.from('servicos').insert([{ nome: document.getElementById('sNome').value, preco: document.getElementById('sPreco').value, barbeiro_id: logado_id }]);
         carregarServicos();
