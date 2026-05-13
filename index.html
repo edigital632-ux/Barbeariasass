@@ -40,6 +40,7 @@
 </head>
 <body>
 
+    <!-- TODAS AS TELAS MANTIDAS IGUAIS -->
     <div id="pLanding" class="page active">
         <h1 class="hero-title">BarberSaaS Pro</h1>
         <p class="hero-sub">O sistema de agendamento que coloca seu salão em outro nível.</p>
@@ -158,23 +159,15 @@
         }
     };
 
-    // A ÚNICA MUDANÇA É NESTA FUNÇÃO PARA RESOLVER O ERRO DO SEU PRINT
+    // FUNÇÃO REAJUSTADA PARA ELIMINAR O PROTOCOLO WHATSAPP:// QUE DÁ O ERRO
     function avisarNoZap(tel, nome, servico, data) {
-        const texto = `Olá ${nome}! Seu horário para ${servico} em ${new Date(data).toLocaleString()} está confirmado!`;
-        const linkSite = "https://wa.me/55" + tel + "?text=" + encodeURIComponent(texto);
+        const msg = `Olá ${nome}! Seu horário para ${servico} em ${new Date(data).toLocaleString()} está confirmado!`;
         
-        // Plano A: Forçar abertura no sistema (Escapa do WebView do Kodular)
-        const a = document.createElement('a');
-        a.href = linkSite;
-        a.target = '_system'; // Instrução para o Android usar o navegador externo
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-
-        // Plano B: Backup caso o clique falhe
-        setTimeout(() => {
-            window.location.replace(linkSite);
-        }, 300);
+        // Usamos APENAS HTTPS:// para o Kodular não pensar que é um erro de esquema
+        const linkHttps = "https://wa.me/55" + tel + "?text=" + encodeURIComponent(msg);
+        
+        // Em vez de window.location, usamos window.open com '_blank' para forçar a saída do WebView
+        window.open(linkHttps, '_blank');
     }
 
     async function autenticar() {
@@ -185,10 +178,8 @@
         if (data) {
             if (data.email === atob(_0x5a3)) { trocarTela('pMaster'); carregarMaster(); return; }
             if (data.status_pagamento !== 'Ativo') { 
-                const msgBloqueio = `Acesso bloqueado. Contate o suporte.`;
-                if(confirm(msgBloqueio)) {
-                    avisarNoZap(SEU_ZAP_ADMIN, "Suporte", "Regularização de conta", new Date());
-                }
+                alert("Acesso inativo. Contatando suporte...");
+                avisarNoZap(SEU_ZAP_ADMIN, "Suporte", "Ativação de Conta", new Date());
                 return; 
             }
             logado_id = data.id;
