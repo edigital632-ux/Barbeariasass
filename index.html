@@ -154,7 +154,7 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getFirestore, collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, where, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getFirestore, collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDOT0GSh5V8EPPBaNdBKMqekEFvCT9bv98",
@@ -328,9 +328,14 @@
     }
 
     window.carregarAgendamentos = async function() { 
-        const q = query(collection(db, 'agendamentos'), where('barbeiro_id', '==', logado_id), orderBy('data_hora', 'asc'));
+        // Correção aplicada aqui: tiramos o orderBy da consulta direta para evitar erro de índice no Firebase
+        const q = query(collection(db, 'agendamentos'), where('barbeiro_id', '==', logado_id));
         const qs = await getDocs(q);
         const data = qs.docs.map(d => ({id: d.id, ...d.data()}));
+        
+        // Ordenamos por data_hora usando JavaScript local!
+        data.sort((a, b) => (a.data_hora || '').localeCompare(b.data_hora || ''));
+
         const list = document.getElementById('listaAgendamentos'); 
         
         if(data && data.length > 0) { 
