@@ -42,6 +42,7 @@
 </head>
 <body>
 
+    <!-- LANDING PAGE PROFISSIONAL -->
     <div id="pLanding" class="page active">
         <div class="hero-section">
             <h1 class="hero-title">BarberSaaS Pro</h1>
@@ -70,6 +71,7 @@
         <p style="text-align:center; color:#444; font-size:12px; padding-bottom:40px;">© 2026 BarberSaaS - Tecnologia para Barbeiros.</p>
     </div>
 
+    <!-- LOGIN -->
     <div id="pAuth" class="page">
         <h2 style="text-align:center; margin-bottom:30px; color:var(--gold);">Login do Profissional</h2>
         <div class="card">
@@ -81,6 +83,7 @@
         </div>
     </div>
 
+    <!-- CADASTRO -->
     <div id="pCadastro" class="page">
         <h2 style="color:var(--gold); text-align:center;">Nova Barbearia</h2>
         <div class="card">
@@ -92,12 +95,14 @@
         </div>
     </div>
 
+    <!-- PAINEL ADMIN MASTER (VOCÊ) -->
     <div id="pMaster" class="page">
         <h2 style="color:var(--gold); text-align:center;">👑 GESTÃO DA PLATAFORMA</h2>
         <div id="listaBarbeirosMaster"></div>
         <button class="btn btn-red" onclick="sair()">SAIR DO ADMIN</button>
     </div>
 
+    <!-- PAINEL DO BARBEIRO -->
     <div id="pBarbeiro" class="page">
         <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
             <h3 id="nomeDaBarbeariaExibicao" style="color:var(--gold); margin:0;"></h3>
@@ -133,6 +138,7 @@
         <button class="btn btn-red" onclick="sair()">SAIR DO SISTEMA</button>
     </div>
 
+    <!-- AGENDAMENTO CLIENTE -->
     <div id="pAgendar" class="page">
         <h2 id="nomeBarbeariaAgendar" style="color:var(--gold); text-align:center;"></h2>
         <div class="card">
@@ -162,6 +168,7 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     
+    // Contém o e-mail master: edigital632@gmail.com
     const _0x5a3 = "ZWRpZ2l0YWw2MzJAZ21haWwuY29t"; 
 
     let logado_id = null;
@@ -223,15 +230,25 @@
         const data = qs.docs.map(d => ({id: d.id, ...d.data()}));
 
         if(data.length > 0) {
-            document.getElementById('listaBarbeirosMaster').innerHTML = data.map(b => `
+            document.getElementById('listaBarbeirosMaster').innerHTML = data.map(b => {
+                let diasRestantes = 0;
+                if(b.data_expiracao) {
+                    const diffTime = new Date(b.data_expiracao) - new Date();
+                    diasRestantes = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                }
+                const textoDias = diasRestantes > 0 ? `${diasRestantes} dias restantes` : "Acesso expirado";
+
+                return `
                 <div class="card">
                     <button class="btn-del" onclick="deletarBarbeiro('${b.id}')">🗑️</button>
-                    <b>${b.nome_salao}</b><br><small>${b.email}</small><br><br>
+                    <b>${b.nome_salao}</b><br>
+                    <small>${b.email}</small><br>
+                    <small style="color: var(--gold); font-weight: bold;">⏳ ${textoDias}</small><br><br>
                     <button class="btn" style="background:${b.status_pagamento === 'Ativo' ? '#00e676' : '#ff4d4d'}; color:black; padding:10px;" onclick="mudarStatus('${b.id}', '${b.status_pagamento}')">
                         ${b.status_pagamento}
                     </button>
-                </div>
-            `).join('');
+                </div>`;
+            }).join('');
         } else { document.getElementById('listaBarbeirosMaster').innerHTML = ""; }
     }
     
@@ -311,7 +328,6 @@
     }
 
     window.carregarAgendamentos = async function() { 
-        // Observação: Para a ordenação funcionar com where, o Firestore pode exigir que você crie um índice composto no console.
         const q = query(collection(db, 'agendamentos'), where('barbeiro_id', '==', logado_id), orderBy('data_hora', 'asc'));
         const qs = await getDocs(q);
         const data = qs.docs.map(d => ({id: d.id, ...d.data()}));
