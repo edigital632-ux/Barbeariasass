@@ -43,7 +43,7 @@
         /* Estilos da Vitrine de Cortes */
         .vitrine-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; margin-top: 10px; }
         .vitrine-item { background: #161616; border: 1px solid #292929; border-radius: 14px; padding: 8px; text-align: center; position: relative; cursor: pointer; transition: 0.2s; }
-        .vitrine-img { width: 100%; height: 110px; object-fit: cover; border-radius: 10px; margin-bottom: 6px; background: #222; }
+        .vitrine-img { width: 100%; height: 110px; object-fit: cover; border-radius: 10px; margin-bottom: 6px; background: #222; display: block; }
         .vitrine-info { font-size: 13px; font-weight: bold; margin: 2px 0; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .vitrine-price { font-size: 12px; color: var(--gold); font-weight: bold; }
         .vitrine-item.selected { border-color: var(--green) !important; background: rgba(0, 230, 118, 0.08) !important; }
@@ -198,6 +198,39 @@
         }
     };
 
+    function trocarTela(id) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        window.scrollTo(0, 0);
+    }
+
+    function sair() {
+        logado_id = null;
+        trocarTela('pLanding');
+    }
+
+    // --- COMPRESSOR DE IMAGEM ---
+    function comprimirImagem(file, maxWidth, qualidade) {
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = function () {
+                const img = new Image();
+                img.onload = function () {
+                    const canvas = document.createElement('canvas');
+                    let w = img.width, h = img.height;
+                    if (w > maxWidth) { h = Math.round(h * maxWidth / w); w = maxWidth; }
+                    canvas.width = w;
+                    canvas.height = h;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, w, h);
+                    resolve(canvas.toDataURL('image/jpeg', qualidade));
+                };
+                img.src = reader.result;
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
     // --- BLOQUEIO E LOGIN ---
     async function autenticar() {
         const e = document.getElementById('uEmail').value;
@@ -211,7 +244,7 @@
                 document.body.innerHTML = `
                     <div style="background:#000; min-height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center; padding:30px; text-align:center; font-family:sans-serif;">
                         <h1 style="color:#ff4d4d; font-size:32px;">SEU ACESSO ACABOU</h1>
-                        <p style="color:#888; font-size:18px; margin:20px 0;">Para continuing acessando o seu painel e recebendo agendamentos, realize o pagamento da sua mensalidade.</p>
+                        <p style="color:#888; font-size:18px; margin:20px 0;">Para continuar acessando o seu painel e recebendo agendamentos, realize o pagamento da sua mensalidade.</p>
                         <button onclick="window.location.href='https://wa.me/5579991073108?text=Ola! Meus 30 dias acabaram, quero renovar meu acesso ao BarberSaaS'" 
                         style="background:#25d366; color:white; border:none; padding:20px 30px; border-radius:15px; font-weight:bold; cursor:pointer; font-size:16px;">
                             PAGAR E LIBERAR ACESSO 📱
@@ -229,34 +262,38 @@
         } else { alert("E-mail ou senha incorretos!"); }
     }
 
-    /* FUNÇÕES DA VITRINE */
+    // --- VITRINE ---
     async function addVitrine() {
         const fileInput = document.getElementById('vFoto');
         const nome = document.getElementById('vNome').value;
         const preco = document.getElementById('vPreco').value;
-        
+
         if (!fileInput.files[0] || !nome || !preco) return alert("Por favor, selecione uma foto, digite o nome e o valor do corte!");
-        
-        const reader = new FileReader();
-        reader.onloadend = async function() {
-            await sb.from('vitrine').insert([{ nome: nome, preco: preco, foto: reader.result, barbeiro_id: logado_id }]);
-            alert("Corte postado com sucesso na sua vitrine!");
-            fileInput.value = "";
-            document.getElementById('vNome').value = "";
-            document.getElementById('vPreco').value = "";
-            carregarVitrine();
+
+        const fotoComprimida = await comprimirImagem(fileInput.files[0], 400, 0.7);
+
+        const { error } = await sb.from('vitrine').insert([{ nome: nome, preco: preco, foto: fotoComprimida, barbeiro_id: logado_id }]);
+
+        if (error) {
+            alert("Erro ao salvar: " + error.message);
+            return;
         }
-        reader.readAsDataURL(fileInput.files[0]);
+
+        alert("Corte postado com sucesso na sua vitrine!");
+        fileInput.value = "";
+        document.getElementById('vNome').value = "";
+        document.getElementById('vPreco').value = "";
+        carregarVitrine();
     }
 
     async function carregarVitrine() {
-        const { data } = await sb.from('vitrine').select('*').eq('barbeiro_id', logado_id);
+        const { data } = await sb.from('vitrine').select('id, nome, preco, foto').eq('barbeiro_id', logado_id);
         const list = document.getElementById('listaVitrineBarbeiro');
-        if(data && data.length > 0) {
+        if (data && data.length > 0) {
             list.innerHTML = data.map(v => `
                 <div class="vitrine-item" style="cursor:default;">
                     <span style="color:var(--red); cursor:pointer; font-weight:bold; position:absolute; top:5px; right:5px; background:rgba(0,0,0,0.8); padding:3px 7px; border-radius:50%; font-size:11px; z-index:10;" onclick="excluirVitrine('${v.id}')">✕</span>
-                    <img src="${v.foto}" class="vitrine-img">
+                    <img src="${v.foto}" class="vitrine-img" onerror="this.style.background='#333'; this.alt='Erro ao carregar';">
                     <div class="vitrine-info">${v.nome}</div>
                     <div class="vitrine-price">R$ ${parseFloat(v.preco).toFixed(2)}</div>
                 </div>
@@ -274,12 +311,12 @@
     }
 
     async function carregarVitrineParaCliente() {
-        const { data } = await sb.from('vitrine').select('*').eq('barbeiro_id', barbeiro_alvo_id);
+        const { data } = await sb.from('vitrine').select('id, nome, preco, foto').eq('barbeiro_id', barbeiro_alvo_id);
         const list = document.getElementById('listaVitrineCliente');
-        if(data && data.length > 0) {
+        if (data && data.length > 0) {
             list.innerHTML = data.map(v => `
                 <div class="vitrine-item" data-preco="${v.preco}" data-nome="${v.nome}" onclick="selecionarVitrineItem(this)">
-                    <img src="${v.foto}" class="vitrine-img">
+                    <img src="${v.foto}" class="vitrine-img" onerror="this.style.background='#333';">
                     <div class="vitrine-info">${v.nome}</div>
                     <div class="vitrine-price">R$ ${parseFloat(v.preco).toFixed(2)}</div>
                 </div>
@@ -294,6 +331,7 @@
         atualizarSoma();
     }
 
+    // --- MASTER ---
     async function carregarMaster() {
         const { data } = await sb.from('perfil_barbeiro').select('*').neq('email', atob(_0x5a3));
         if(data) {
@@ -322,80 +360,187 @@
         } 
     }
 
+    // --- CADASTRO ---
     async function registrarBarbeiro() {
-        const n = document.getElementById('regNome').value; const e = document.getElementById('regEmail').value; const s = document.getElementById('regSenha').value;
+        const n = document.getElementById('regNome').value;
+        const e = document.getElementById('regEmail').value;
+        const s = document.getElementById('regSenha').value;
         const d = new Date(); d.setDate(d.getDate() + 30);
         await sb.from('perfil_barbeiro').insert([{ nome_salao: n, email: e, senha: s, status_pagamento: 'Ativo', data_expiracao: d.toISOString() }]);
-        alert("Conta criada! Você tem 30 dias grátis."); trocarTela('pAuth');
+        alert("Conta criada! Você tem 30 dias grátis.");
+        trocarTela('pAuth');
     }
 
-    function carregarDadosDash() { const fat = parseFloat(localStorage.getItem('faturamento_barber') || 0); const cortes = parseInt(localStorage.getItem('cortes_hoje') || 0); document.getElementById('valFaturamento').innerText = "R$ " + fat.toFixed(2); document.getElementById('valTicket').innerText = "R$ " + (cortes > 0 ? (fat / cortes).toFixed(2) : "0.00"); }
-    function zerarMes() { if(confirm("Zerar mês?")) { localStorage.setItem('faturamento_barber', 0); localStorage.setItem('cortes_hoje', 0); carregarDadosDash(); } }
-    function trocarTela(id) { document.querySelectorAll('.page').forEach(p => p.classList.remove('active')); document.getElementById(id).classList.add('active'); window.scrollTo(0,0); }
-    function copiarLink() { navigator.clipboard.writeText(document.getElementById('meuLink').innerText); alert("Copiado!"); }
-    function sair() { window.location.search = ""; window.location.reload(); }
-    
-    async function addServico() { await sb.from('servicos').insert([{ nome: document.getElementById('sNome').value, preco: document.getElementById('sPreco').value, barbeiro_id: logado_id }]); carregarServicos(); }
-    
-    async function carregarServicos() { 
-        const { data } = await sb.from('servicos').select('*').eq('barbeiro_id', logado_id); 
-        if(data) document.getElementById('listaServicosBarbeiro').innerHTML = data.map(s => `
-            <div style="display:flex; justify-content:space-between; padding:8px; border-bottom:1px solid #222; align-items:center;">
-                <span>${s.nome} - <b>R$ ${s.preco}</b></span>
-                <span style="color:var(--red); cursor:pointer; font-weight:bold; padding:5px;" onclick="excluirServico('${s.id}')">✕</span>
-            </div>`).join(''); 
+    // --- SERVIÇOS ---
+    async function addServico() {
+        const nome = document.getElementById('sNome').value;
+        const preco = document.getElementById('sPreco').value;
+        if (!nome || !preco) return alert("Preencha o nome e o valor do serviço!");
+        await sb.from('servicos').insert([{ nome: nome, preco: preco, barbeiro_id: logado_id }]);
+        document.getElementById('sNome').value = "";
+        document.getElementById('sPreco').value = "";
+        carregarServicos();
     }
 
-    async function excluirServico(id) {
-        if(confirm("Excluir este serviço?")) {
-            await sb.from('servicos').delete().eq('id', id);
-            carregarServicos();
+    async function carregarServicos() {
+        const { data } = await sb.from('servicos').select('*').eq('barbeiro_id', logado_id);
+        const list = document.getElementById('listaServicosBarbeiro');
+        if (data && data.length > 0) {
+            list.innerHTML = data.map(s => `
+                <div class="card" style="padding:12px; margin-bottom:8px;">
+                    <button class="btn-del" onclick="excluirServico('${s.id}')">✕</button>
+                    <b>${s.nome}</b> — <span style="color:var(--gold)">R$ ${parseFloat(s.preco).toFixed(2)}</span>
+                </div>
+            `).join('');
+        } else {
+            list.innerHTML = "<p style='color:#555; font-size:12px;'>Nenhum serviço cadastrado ainda.</p>";
         }
     }
 
-    async function carregarServicosParaCliente() { const { data } = await sb.from('servicos').select('*').eq('barbeiro_id', barbeiro_alvo_id); if(data) document.getElementById('listaServicosMultiplos').innerHTML = data.map(s => `<div style="display:flex; align-items:center; padding:12px; border-bottom:1px solid #222;"><input type="checkbox" name="servicoCheck" value="${s.nome}" data-preco="${s.preco}" onchange="atualizarSoma()" style="width:22px; height:22px; margin-right:15px;"><label>${s.nome} - R$ ${s.preco}</label></div>`).join(''); }
-    
-    function atualizarSoma() { 
-        let t = 0; 
-        document.querySelectorAll('input[name="servicoCheck"]:checked').forEach(i => t += parseFloat(i.getAttribute('data-preco') || 0)); 
-        document.querySelectorAll('.vitrine-item.selected').forEach(i => t += parseFloat(i.getAttribute('data-preco') || 0)); 
-        document.getElementById('valorTotalCliente').innerText = t.toFixed(2); 
+    async function excluirServico(id) {
+        await sb.from('servicos').delete().eq('id', id);
+        carregarServicos();
     }
-    
-    async function confirmarAgendamento() { 
-        const n = document.getElementById('cNome').value; 
-        const z = document.getElementById('cZap').value; 
-        const d = document.getElementById('dataHoraAgendamento').value; 
-        const v = document.getElementById('valorTotalCliente').innerText; 
-        const marcados = document.querySelectorAll('input[name="servicoCheck"]:checked'); 
-        let s = []; 
-        marcados.forEach(c => s.push(c.value)); 
-        document.querySelectorAll('.vitrine-item.selected').forEach(c => s.push(c.getAttribute('data-nome'))); 
-        
-        if(!n || !d || s.length === 0) return alert("Preencha tudo!"); 
-        await sb.from('agendamentos').insert([{ cliente_nome: n, cliente_zap: z, data_hora: d, barbeiro_id: barbeiro_alvo_id, comentario_cliente: `R$ ${v} (${s.join(", ")})` }]); 
-        alert("Horário Reservado!"); location.reload(); 
-    }
-    
-    async function carregarAgendamentos() { const { data } = await sb.from('agendamentos').select('*').eq('barbeiro_id', logado_id).order('data_hora', { ascending: true }); const list = document.getElementById('listaAgendamentos'); if(data && data.length > 0) { let html = ''; for (const a of data) { const { data: f } = await sb.from('fidelidade_clientes').select('total_cortes').eq('cliente_zap', a.cliente_zap).maybeSingle(); html += `<div class="card" style="border-left: 5px solid var(--gold);">${f ? `<span class="fidelidade-badge">💎 CLIENTE FIEL (${f.total_cortes}x)</span>` : ''}<br><b>${a.cliente_nome}</b><br><small>⏰ ${new Date(a.data_hora).toLocaleString()}</small><div style="display:flex; gap:10px; margin-top:15px;"><button class="btn btn-green" style="padding:10px; font-size:10px;" onclick="finalizarAgendamento('${a.id}','${a.comentario_cliente}','${a.cliente_zap}','${a.cliente_nome}')">CONCLUIR</button><button class="btn" style="background:#25d366; color:white; padding:10px; font-size:10px;" onclick="avisarNoZap('${a.cliente_zap}','${a.cliente_nome}','${a.comentario_cliente}','${a.data_hora}')">WHATSAPP</button></div></div>`; } list.innerHTML = html; } else { list.innerHTML = "<p style='text-align:center; color:#555;'>Nenhum agendamento para hoje.</p>"; } }
-    
-    function avisarNoZap(tel, nome, servico, data) { const msg = `*CONFIRMAÇÃO*\n\nOlá *${nome}*! Seu horário para *${servico}* está confirmado.\n\n📅 Data: ${new Date(data).toLocaleString()}`; window.open("https://wa.me/55" + tel.replace(/\D/g, '') + "?text=" + encodeURIComponent(msg)); }
 
-    async function finalizarAgendamento(id, precoStr, zap, nome) { 
-        if(confirm("Finalizar atendimento?")) { 
-            const v = parseFloat(precoStr.split('R$ ')[1]) || 0; 
-            localStorage.setItem('faturamento_barber', parseFloat(localStorage.getItem('faturamento_barber') || 0) + v); 
-            localStorage.setItem('cortes_hoje', parseInt(localStorage.getItem('cortes_hoje') || 0) + 1); 
-            carregarDadosDash(); 
-            const { data: fid } = await sb.from('fidelidade_clientes').select('*').eq('barbeiro_id', logado_id).eq('cliente_zap', zap).maybeSingle(); 
-            if(fid) { 
-                await sb.from('fidelidade_clientes').update({ total_cortes: fid.total_cortes + 1 }).eq('id', fid.id); 
-            } else { 
-                await sb.from('fidelidade_clientes').insert([{ barbeiro_id: logado_id, cliente_zap: zap, total_cortes: 1, cliente_nome: nome }]); 
-            } 
-            await sb.from('agendamentos').delete().eq('id', id); 
-            carregarAgendamentos(); 
-        } 
+    async function carregarServicosParaCliente() {
+        const { data } = await sb.from('servicos').select('*').eq('barbeiro_id', barbeiro_alvo_id);
+        const list = document.getElementById('listaServicosMultiplos');
+        if (data && data.length > 0) {
+            list.innerHTML = data.map(s => `
+                <div style="display:flex; align-items:center; gap:10px; padding:12px; background:#1a1a1a; border-radius:10px; margin-bottom:8px; border:1px solid #2a2a2a;">
+                    <input type="checkbox" id="srv_${s.id}" data-preco="${s.preco}" data-nome="${s.nome}" onchange="atualizarSoma()" style="width:20px; height:20px; accent-color:var(--gold);">
+                    <label for="srv_${s.id}" style="flex:1; cursor:pointer;">${s.nome}</label>
+                    <span style="color:var(--gold); font-weight:bold;">R$ ${parseFloat(s.preco).toFixed(2)}</span>
+                </div>
+            `).join('');
+        } else {
+            list.innerHTML = "<p style='color:#555; font-size:12px;'>Nenhum serviço adicional disponível.</p>";
+        }
+    }
+
+    function atualizarSoma() {
+        let total = 0;
+        // Somar itens da vitrine selecionados
+        document.querySelectorAll('#listaVitrineCliente .vitrine-item.selected').forEach(el => {
+            total += parseFloat(el.dataset.preco) || 0;
+        });
+        // Somar checkboxes de serviços marcados
+        document.querySelectorAll('#listaServicosMultiplos input[type="checkbox"]:checked').forEach(cb => {
+            total += parseFloat(cb.dataset.preco) || 0;
+        });
+        document.getElementById('valorTotalCliente').innerText = total.toFixed(2);
+    }
+
+    // --- AGENDAMENTOS ---
+    async function confirmarAgendamento() {
+        const nome = document.getElementById('cNome').value;
+        const zap = document.getElementById('cZap').value;
+        const dataHora = document.getElementById('dataHoraAgendamento').value;
+
+        if (!nome || !zap || !dataHora) return alert("Preencha seu nome, WhatsApp e horário!");
+
+        const itensSelecionados = [];
+        let total = 0;
+
+        document.querySelectorAll('#listaVitrineCliente .vitrine-item.selected').forEach(el => {
+            itensSelecionados.push(el.dataset.nome);
+            total += parseFloat(el.dataset.preco) || 0;
+        });
+        document.querySelectorAll('#listaServicosMultiplos input[type="checkbox"]:checked').forEach(cb => {
+            itensSelecionados.push(cb.dataset.nome);
+            total += parseFloat(cb.dataset.preco) || 0;
+        });
+
+        if (itensSelecionados.length === 0) return alert("Selecione pelo menos um serviço ou corte!");
+
+        const servicosStr = itensSelecionados.join(', ');
+
+        await sb.from('agendamentos').insert([{
+            barbeiro_id: barbeiro_alvo_id,
+            cliente_nome: nome,
+            cliente_zap: zap,
+            data_hora: new Date(dataHora).toISOString(),
+            servicos: servicosStr,
+            valor_total: total
+        }]);
+
+        // Fidelidade
+        const { data: fid } = await sb.from('fidelidade_clientes').select('*').eq('barbeiro_id', barbeiro_alvo_id).eq('zap', zap).maybeSingle();
+        if (fid) {
+            await sb.from('fidelidade_clientes').update({ cortes: fid.cortes + 1 }).eq('id', fid.id);
+        } else {
+            await sb.from('fidelidade_clientes').insert([{ barbeiro_id: barbeiro_alvo_id, nome: nome, zap: zap, cortes: 1 }]);
+        }
+
+        alert(`✅ Horário reservado com sucesso!\n\nServiços: ${servicosStr}\nTotal: R$ ${total.toFixed(2)}\n\nAté logo, ${nome}!`);
+        document.getElementById('cNome').value = "";
+        document.getElementById('cZap').value = "";
+        document.getElementById('dataHoraAgendamento').value = "";
+        document.querySelectorAll('#listaVitrineCliente .vitrine-item.selected').forEach(el => el.classList.remove('selected'));
+        document.querySelectorAll('#listaServicosMultiplos input[type="checkbox"]:checked').forEach(cb => cb.checked = false);
+        atualizarSoma();
+    }
+
+    async function carregarAgendamentos() {
+        if (!logado_id) return;
+        const hoje = new Date(); hoje.setHours(0,0,0,0);
+        const { data } = await sb.from('agendamentos').select('*').eq('barbeiro_id', logado_id).gte('data_hora', hoje.toISOString()).order('data_hora', { ascending: true });
+        const list = document.getElementById('listaAgendamentos');
+        if (data && data.length > 0) {
+            list.innerHTML = data.map(a => {
+                const dt = new Date(a.data_hora);
+                const dtStr = dt.toLocaleDateString('pt-BR') + ' às ' + dt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                return `
+                <div class="card" style="padding:14px; margin-bottom:10px;">
+                    <button class="btn-del" onclick="excluirAgendamento('${a.id}')">✕</button>
+                    <b style="color:var(--gold);">${a.cliente_nome}</b><br>
+                    <small style="color:#888;">📱 ${a.cliente_zap}</small><br>
+                    <small style="color:#aaa;">🕐 ${dtStr}</small><br>
+                    <small style="color:#ccc;">✂️ ${a.servicos}</small><br>
+                    <small style="color:var(--green);">💰 R$ ${parseFloat(a.valor_total || 0).toFixed(2)}</small><br><br>
+                    <button onclick="abrirWhatsApp('${a.cliente_zap}', '${a.cliente_nome}', '${dtStr}')" style="background:#25d366; color:white; border:none; padding:10px 15px; border-radius:8px; cursor:pointer; font-size:12px; font-weight:bold; width:100%;">📱 CONFIRMAR VIA WHATSAPP</button>
+                </div>`;
+            }).join('');
+        } else {
+            list.innerHTML = "<p style='color:#555; font-size:12px; text-align:center;'>Nenhum agendamento próximo.</p>";
+        }
+    }
+
+    async function excluirAgendamento(id) {
+        if(confirm("Deseja cancelar este agendamento?")) {
+            await sb.from('agendamentos').delete().eq('id', id);
+            carregarAgendamentos();
+        }
+    }
+
+    function abrirWhatsApp(zap, nome, horario) {
+        const msg = encodeURIComponent(`Olá ${nome}! Confirmando seu agendamento para ${horario}. Até logo! ✂️`);
+        window.open(`https://wa.me/55${zap.replace(/\D/g,'')}?text=${msg}`, '_blank');
+    }
+
+    // --- FINANCEIRO ---
+    function carregarDadosDash() {
+        const fat = parseFloat(localStorage.getItem('fat') || '0');
+        const qtd = parseInt(localStorage.getItem('qtd') || '0');
+        document.getElementById('valFaturamento') && (document.getElementById('valFaturamento').innerText = fat.toFixed(2).replace('.', ','));
+        document.getElementById('valTicket') && (document.getElementById('valTicket').innerText = qtd > 0 ? (fat / qtd).toFixed(2).replace('.', ',') : '0,00');
+    }
+
+    function zerarMes() {
+        if(confirm("Deseja zerar o faturamento para iniciar um novo mês?")) {
+            localStorage.setItem('fat', '0');
+            localStorage.setItem('qtd', '0');
+            carregarDadosDash();
+        }
+    }
+
+    function copiarLink() {
+        const link = document.getElementById('meuLink').innerText;
+        navigator.clipboard.writeText(link).then(() => alert("Link copiado!")).catch(() => {
+            const el = document.createElement('textarea');
+            el.value = link; document.body.appendChild(el); el.select(); document.execCommand('copy'); document.body.removeChild(el);
+            alert("Link copiado!");
+        });
     }
 </script>
 </body>
