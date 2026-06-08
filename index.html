@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BarberSaaS Pro v2.0</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root { --gold: #d4af37; --dark: #000000; --card: #121212; --red: #ff4d4d; --green: #00e676; --white: #f5f5f5; --gray: #222; }
         body { background-color: var(--dark); color: var(--white); font-family: 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 0; }
@@ -38,11 +39,17 @@
 
         .fidelidade-badge { background: rgba(0, 230, 118, 0.1); color: var(--green); padding: 4px 8px; border-radius: 5px; font-size: 11px; font-weight: bold; display: inline-block; margin-bottom: 10px; border: 1px solid var(--green); }
         code { display: block; background: #050505; padding: 12px; border-radius: 8px; color: var(--gold); font-size: 11px; border: 1px solid #222; margin: 10px 0; white-space: pre-wrap; }
+
+        /* Estilos Estáveis da Vitrine de Cortes */
+        .vitrine-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; margin-top: 10px; }
+        .vitrine-item { background: #161616; border: 1px solid #292929; border-radius: 14px; padding: 8px; text-align: center; position: relative; cursor: pointer; transition: 0.2s; }
+        .vitrine-img { width: 100%; height: 110px; object-fit: cover; border-radius: 10px; margin-bottom: 6px; background: #222; }
+        .vitrine-info { font-size: 13px; font-weight: bold; margin: 2px 0; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .vitrine-price { font-size: 12px; color: var(--gold); font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <!-- LANDING PAGE PROFISSIONAL -->
     <div id="pLanding" class="page active">
         <div class="hero-section">
             <h1 class="hero-title">BarberSaaS Pro</h1>
@@ -71,7 +78,6 @@
         <p style="text-align:center; color:#444; font-size:12px; padding-bottom:40px;">© 2026 BarberSaaS - Tecnologia para Barbeiros.</p>
     </div>
 
-    <!-- LOGIN -->
     <div id="pAuth" class="page">
         <h2 style="text-align:center; margin-bottom:30px; color:var(--gold);">Login do Profissional</h2>
         <div class="card">
@@ -83,7 +89,6 @@
         </div>
     </div>
 
-    <!-- CADASTRO -->
     <div id="pCadastro" class="page">
         <h2 style="color:var(--gold); text-align:center;">Nova Barbearia</h2>
         <div class="card">
@@ -95,14 +100,12 @@
         </div>
     </div>
 
-    <!-- PAINEL ADMIN MASTER (VOCÊ) -->
     <div id="pMaster" class="page">
         <h2 style="color:var(--gold); text-align:center;">👑 GESTÃO DA PLATAFORMA</h2>
         <div id="listaBarbeirosMaster"></div>
         <button class="btn btn-red" onclick="sair()">SAIR DO ADMIN</button>
     </div>
 
-    <!-- PAINEL DO BARBEIRO -->
     <div id="pBarbeiro" class="page">
         <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
             <h3 id="nomeDaBarbeariaExibicao" style="color:var(--gold); margin:0;"></h3>
@@ -128,6 +131,16 @@
         </div>
 
         <div class="card">
+            <h3>📸 Minha Vitrine de Cortes (Fotos)</h3>
+            <div id="listaVitrineBarbeiro" class="vitrine-grid" style="margin-bottom:15px;"></div>
+            <label style="font-size:12px; color:#888;">Selecionar Foto do Corte:</label>
+            <input type="file" id="vFoto" accept="image/*" style="padding:10px; background:#1a1a1a;">
+            <input type="text" id="vNome" placeholder="Nome do Corte (Ex: Degradê Platinado)">
+            <input type="number" id="vPreco" placeholder="Valor R$">
+            <button class="btn btn-green" onclick="addVitrine()">POSTAR NA VITRINE</button>
+        </div>
+
+        <div class="card">
             <h3>✂️ Configurar Meus Serviços</h3>
             <div id="listaServicosBarbeiro" style="margin-bottom:15px;"></div>
             <input type="text" id="sNome" placeholder="Ex: Corte Americano">
@@ -138,11 +151,16 @@
         <button class="btn btn-red" onclick="sair()">SAIR DO SISTEMA</button>
     </div>
 
-    <!-- AGENDAMENTO CLIENTE -->
     <div id="pAgendar" class="page">
         <h2 id="nomeBarbeariaAgendar" style="color:var(--gold); text-align:center;"></h2>
         <div class="card">
+            
+            <h4 style="color:var(--gold); margin: 0 0 10px 0;">📸 Catálogo de Cortes (Clique para Escolher)</h4>
+            <div id="listaVitrineCliente" class="vitrine-grid" style="margin-bottom:25px;"></div>
+
+            <h4 style="color:var(--gold); margin: 0 0 10px 0;">✂️ Outros Serviços</h4>
             <div id="listaServicosMultiplos"></div>
+            
             <div style="text-align:right; margin:15px 0;">Total: <span style="font-size:24px; color:var(--green); font-weight:bold;">R$ <span id="valorTotalCliente">0.00</span></span></div>
             
             <input type="text" id="cNome" placeholder="Seu Nome">
@@ -152,55 +170,46 @@
         </div>
     </div>
 
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getFirestore, collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyDOT0GSh5V8EPPBaNdBKMqekEFvCT9bv98",
-      authDomain: "barbearia-5c6c6.firebaseapp.com",
-      projectId: "barbearia-5c6c6",
-      storageBucket: "barbearia-5c6c6.firebasestorage.app",
-      messagingSenderId: "496385729722",
-      appId: "1:496385729722:web:cd494bc4ab2bde851b8e83"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    
-    // Contém o e-mail master: edigital632@gmail.com
+<script>
+    const _0x5a1 = "aHR0cHM6Ly9yZXJ1Y3B0b3hic2VuZnJvc2pncS5zdXBhYmFzZS5jbw==";
+    const _0x5a2 = "c2JfcHVibGlzaGFibGVfTXVELW9WOGF5a3BKZ2Ryb0lRakV6d19La2liXzRZVw==";
     const _0x5a3 = "ZWRpZ2l0YWw2MzJAZ21haWwuY29t"; 
 
+    const URL_SB = atob(_0x5a1);
+    const KEY_SB = atob(_0x5a2);
+    const sb = window.supabase.createClient(URL_SB, KEY_SB);
+    
     let logado_id = null;
     const barbeiro_alvo_id = new URLSearchParams(window.location.search).get('id');
 
+    // Módulo Antiacesso e Blindagem Antinjection XSS
+    function esc(str) {
+        if (!str) return '';
+        return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
     window.onload = async () => {
-        window.carregarDadosDash();
+        carregarDadosDash();
         if(barbeiro_alvo_id) {
-            const docRef = doc(db, 'perfil_barbeiro', barbeiro_alvo_id);
-            const docSnap = await getDoc(docRef);
-            
-            if(docSnap.exists() && docSnap.data().status_pagamento === 'Ativo') {
-                document.getElementById('nomeBarbeariaAgendar').innerText = docSnap.data().nome_salao;
-                window.trocarTela('pAgendar'); window.carregarServicosParaCliente();
+            const { data } = await sb.from('perfil_barbeiro').select('*').eq('id', barbeiro_alvo_id).maybeSingle();
+            if(data && data.status_pagamento === 'Ativo') {
+                document.getElementById('nomeBarbeariaAgendar').innerText = data.nome_salao;
+                trocarTela('pAgendar'); 
+                carregarServicosParaCliente();
+                carregarVitrineParaCliente();
             } else {
                 document.body.innerHTML = "<div style='color:white; text-align:center; padding-top:100px; padding-left:20px; padding-right:20px;'><h3>SISTEMA SUSPENSO</h3><p>Este estabelecimento está temporariamente inativo por falta de pagamento.</p></div>";
             }
         }
     };
 
-    window.autenticar = async function() {
+    async function autenticar() {
         const e = document.getElementById('uEmail').value;
         const s = document.getElementById('uSenha').value;
+        const { data } = await sb.from('perfil_barbeiro').select('*').eq('email', e).eq('senha', s).maybeSingle();
         
-        const q = query(collection(db, 'perfil_barbeiro'), where('email', '==', e), where('senha', '==', s));
-        const qs = await getDocs(q);
-        
-        if (!qs.empty) {
-            const docData = qs.docs[0];
-            const data = { id: docData.id, ...docData.data() };
-
-            if (data.email === atob(_0x5a3)) { window.trocarTela('pMaster'); window.carregarMaster(); return; }
+        if (data) {
+            if (data.email === atob(_0x5a3)) { trocarTela('pMaster'); carregarMaster(); return; }
             
             if (data.status_pagamento !== 'Ativo') {
                 document.body.innerHTML = `
@@ -220,133 +229,177 @@
             logado_id = data.id;
             document.getElementById('nomeDaBarbeariaExibicao').innerText = data.nome_salao;
             document.getElementById('meuLink').innerText = window.location.origin + window.location.pathname + "?id=" + data.id;
-            window.trocarTela('pBarbeiro'); window.carregarServicos(); window.carregarAgendamentos();
+            trocarTela('pBarbeiro'); carregarServicos(); carregarAgendamentos(); carregarVitrine();
         } else { alert("E-mail ou senha incorretos!"); }
     }
 
-    window.carregarMaster = async function() {
-        const q = query(collection(db, 'perfil_barbeiro'), where('email', '!=', atob(_0x5a3)));
-        const qs = await getDocs(q);
-        const data = qs.docs.map(d => ({id: d.id, ...d.data()}));
-
-        if(data.length > 0) {
-            document.getElementById('listaBarbeirosMaster').innerHTML = data.map(b => {
-                let diasRestantes = 0;
-                if(b.data_expiracao) {
-                    const diffTime = new Date(b.data_expiracao) - new Date();
-                    diasRestantes = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                }
-                const textoDias = diasRestantes > 0 ? `${diasRestantes} dias restantes` : "Acesso expirado";
-
-                return `
-                <div class="card">
-                    <button class="btn-del" onclick="deletarBarbeiro('${b.id}')">🗑️</button>
-                    <b>${b.nome_salao}</b><br>
-                    <small>${b.email}</small><br>
-                    <small style="color: var(--gold); font-weight: bold;">⏳ ${textoDias}</small><br><br>
-                    <button class="btn" style="background:${b.status_pagamento === 'Ativo' ? '#00e676' : '#ff4d4d'}; color:black; padding:10px;" onclick="mudarStatus('${b.id}', '${b.status_pagamento}')">
-                        ${b.status_pagamento}
-                    </button>
-                </div>`;
-            }).join('');
-        } else { document.getElementById('listaBarbeirosMaster').innerHTML = ""; }
-    }
-    
-    window.mudarStatus = async function(id, atual) { 
-        await updateDoc(doc(db, 'perfil_barbeiro', id), { status_pagamento: atual === 'Ativo' ? 'Inativo' : 'Ativo' }); 
-        window.carregarMaster(); 
-    }
-    
-    window.deletarBarbeiro = async function(id) { 
-        if(confirm("Deseja EXCLUIR permanentemente este barbeiro e todos os seus dados?")) { 
-            const deleteRelated = async (colName) => {
-                const q = query(collection(db, colName), where('barbeiro_id', '==', id));
-                const snap = await getDocs(q);
-                snap.forEach(async (d) => await deleteDoc(doc(db, colName, d.id)));
-            };
-
-            await deleteRelated('servicos'); 
-            await deleteRelated('agendamentos'); 
-            await deleteRelated('fidelidade_clientes');
-            await deleteDoc(doc(db, 'perfil_barbeiro', id)); 
-            window.carregarMaster(); 
-        } 
+    /* MECANISMOS EXCLUSIVOS DA VITRINE DE FOTOS (SUPABASE) */
+    async function addVitrine() {
+        const fileInput = document.getElementById('vFoto');
+        const nome = document.getElementById('vNome').value;
+        const preco = document.getElementById('vPreco').value;
+        
+        if (!fileInput.files[0] || !nome || !preco) return alert("Por favor, selecione uma foto, digite o nome e o valor do corte!");
+        
+        const reader = new FileReader();
+        reader.onloadend = async function() {
+            await sb.from('vitrine').insert([{ nome: nome, preco: preco, foto: reader.result, barbeiro_id: logado_id }]);
+            alert("Corte postado com sucesso na sua vitrine!");
+            fileInput.value = "";
+            document.getElementById('vNome').value = "";
+            document.getElementById('vPreco').value = "";
+            carregarVitrine();
+        }
+        reader.readAsDataURL(fileInput.files[0]);
     }
 
-    window.registrarBarbeiro = async function() {
-        const n = document.getElementById('regNome').value; const e = document.getElementById('regEmail').value; const s = document.getElementById('regSenha').value;
-        const d = new Date(); d.setDate(d.getDate() + 30);
-        await addDoc(collection(db, 'perfil_barbeiro'), { nome_salao: n, email: e, senha: s, status_pagamento: 'Ativo', data_expiracao: d.toISOString() });
-        alert("Conta criada! Você tem 30 dias grátis."); window.trocarTela('pAuth');
-    }
-
-    window.carregarDadosDash = function() { const fat = parseFloat(localStorage.getItem('faturamento_barber') || 0); const cortes = parseInt(localStorage.getItem('cortes_hoje') || 0); document.getElementById('valFaturamento').innerText = "R$ " + fat.toFixed(2); document.getElementById('valTicket').innerText = "R$ " + (cortes > 0 ? (fat / cortes).toFixed(2) : "0.00"); }
-    window.zerarMes = function() { if(confirm("Zerar mês?")) { localStorage.setItem('faturamento_barber', 0); localStorage.setItem('cortes_hoje', 0); window.carregarDadosDash(); } }
-    window.trocarTela = function(id) { document.querySelectorAll('.page').forEach(p => p.classList.remove('active')); document.getElementById(id).classList.add('active'); window.scrollTo(0,0); }
-    window.copiarLink = function() { navigator.clipboard.writeText(document.getElementById('meuLink').innerText); alert("Copiado!"); }
-    window.sair = function() { window.location.search = ""; window.location.reload(); }
-    
-    window.addServico = async function() { 
-        await addDoc(collection(db, 'servicos'), { nome: document.getElementById('sNome').value, preco: document.getElementById('sPreco').value, barbeiro_id: logado_id }); 
-        window.carregarServicos(); 
-    }
-    
-    window.carregarServicos = async function() { 
-        const q = query(collection(db, 'servicos'), where('barbeiro_id', '==', logado_id));
-        const qs = await getDocs(q);
-        const data = qs.docs.map(d => ({id: d.id, ...d.data()}));
-
-        if(data.length > 0) document.getElementById('listaServicosBarbeiro').innerHTML = data.map(s => `
-            <div style="display:flex; justify-content:space-between; padding:8px; border-bottom:1px solid #222; align-items:center;">
-                <span>${s.nome} - <b>R$ ${s.preco}</b></span>
-                <span style="color:var(--red); cursor:pointer; font-weight:bold; padding:5px;" onclick="excluirServico('${s.id}')">✕</span>
-            </div>`).join(''); 
-        else document.getElementById('listaServicosBarbeiro').innerHTML = "";
-    }
-
-    window.excluirServico = async function(id) {
-        if(confirm("Excluir este serviço?")) {
-            await deleteDoc(doc(db, 'servicos', id));
-            window.carregarServicos();
+    async function carregarVitrine() {
+        const { data } = await sb.from('vitrine').select('*').eq('barbeiro_id', logado_id);
+        const list = document.getElementById('listaVitrineBarbeiro');
+        if(data && data.length > 0) {
+            list.innerHTML = data.map(v => `
+                <div class="vitrine-item" style="cursor:default;">
+                    <span style="color:var(--red); cursor:pointer; font-weight:bold; position:absolute; top:5px; right:5px; background:rgba(0,0,0,0.8); padding:3px 7px; border-radius:50%; font-size:11px; z-index:10;" onclick="excluirVitrine('${v.id}')">✕</span>
+                    <img src="${v.foto}" class="vitrine-img">
+                    <div class="vitrine-info">${esc(v.nome)}</div>
+                    <div class="vitrine-price">R$ ${parseFloat(v.preco).toFixed(2)}</div>
+                </div>
+            `).join('');
+        } else {
+            list.innerHTML = "<p style='grid-column:1/-1; text-align:center; color:#555; font-size:12px;'>Você ainda não postou fotos na vitrine.</p>";
         }
     }
 
-    window.carregarServicosParaCliente = async function() { 
-        const q = query(collection(db, 'servicos'), where('barbeiro_id', '==', barbeiro_alvo_id));
-        const qs = await getDocs(q);
-        const data = qs.docs.map(d => ({id: d.id, ...d.data()}));
-
-        if(data.length > 0) document.getElementById('listaServicosMultiplos').innerHTML = data.map(s => `<div style="display:flex; align-items:center; padding:12px; border-bottom:1px solid #222;"><input type="checkbox" name="servicoCheck" value="${s.nome}" data-preco="${s.preco}" onchange="atualizarSoma()" style="width:22px; height:22px; margin-right:15px;"><label>${s.nome} - R$ ${s.preco}</label></div>`).join(''); 
+    async function excluirVitrine(id) {
+        if(confirm("Deseja remover esta foto do seu catálogo?")) {
+            await sb.from('vitrine').delete().eq('id', id);
+            carregarVitrine();
+        }
     }
-    window.atualizarSoma = function() { let t = 0; document.querySelectorAll('input[name="servicoCheck"]:checked').forEach(i => t += parseFloat(i.getAttribute('data-preco'))); document.getElementById('valorTotalCliente').innerText = t.toFixed(2); }
+
+    async function carregarVitrineParaCliente() {
+        const { data } = await sb.from('vitrine').select('*').eq('barbeiro_id', barbeiro_alvo_id);
+        const list = document.getElementById('listaVitrineCliente');
+        if(data && data.length > 0) {
+            list.innerHTML = data.map(v => `
+                <div class="vitrine-item" data-preco="${v.preco}" data-nome="${v.nome}" onclick="selecionarVitrineItem(this)">
+                    <img src="${v.foto}" class="vitrine-img">
+                    <div class="vitrine-info">${esc(v.nome)}</div>
+                    <div class="vitrine-price">R$ ${parseFloat(v.preco).toFixed(2)}</div>
+                </div>
+            `).join('');
+        } else {
+            list.innerHTML = "<p style='grid-column:1/-1; text-align:center; color:#555; font-size:12px;'>Nenhum modelo de corte na vitrine.</p>";
+        }
+    }
+
+    function selecionarVitrineItem(elemento) {
+        elemento.classList.toggle('selected');
+        if (elemento.classList.contains('selected')) {
+            elemento.style.borderColor = 'var(--green)';
+            elemento.style.background = 'rgba(0, 230, 118, 0.08)';
+        } else {
+            elemento.style.borderColor = '#292929';
+            elemento.style.background = '#161616';
+        }
+        atualizarSoma();
+    }
+    /* FIM DO MÓDULO VITRINE */
+
+    async function carregarMaster() {
+        const { data } = await sb.from('perfil_barbeiro').select('*').neq('email', atob(_0x5a3));
+        if(data) {
+            document.getElementById('listaBarbeirosMaster').innerHTML = data.map(b => `
+                <div class="card">
+                    <button class="btn-del" onclick="deletarBarbeiro('${b.id}')">🗑️</button>
+                    <b>${esc(b.nome_salao)}</b><br><small>${esc(b.email)}</small><br><br>
+                    <button class="btn" style="background:${b.status_pagamento === 'Ativo' ? '#00e676' : '#ff4d4d'}; color:black; padding:10px;" onclick="mudarStatus('${b.id}', '${b.status_pagamento}')">
+                        ${esc(b.status_pagamento)}
+                    </button>
+                </div>
+            `).join('');
+        }
+    }
     
-    window.confirmarAgendamento = async function() { 
-        const n = document.getElementById('cNome').value; const z = document.getElementById('cZap').value; const d = document.getElementById('dataHoraAgendamento').value; const v = document.getElementById('valorTotalCliente').innerText; const marcados = document.querySelectorAll('input[name="servicoCheck"]:checked'); let s = []; marcados.forEach(c => s.push(c.value)); 
+    async function mudarStatus(id, atual) { await sb.from('perfil_barbeiro').update({ status_pagamento: atual === 'Ativo' ? 'Inativo' : 'Ativo' }).eq('id', id); carregarMaster(); }
+    
+    async function deletarBarbeiro(id) { 
+        if(confirm("Deseja EXCLUIR permanentemente este barbeiro e todos os seus dados?")) { 
+            await sb.from('servicos').delete().eq('barbeiro_id', id); 
+            await sb.from('agendamentos').delete().eq('barbeiro_id', id); 
+            await sb.from('fidelidade_clientes').delete().eq('barbeiro_id', id);
+            await sb.from('vitrine').delete().eq('barbeiro_id', id);
+            await sb.from('perfil_barbeiro').delete().eq('id', id); 
+            carregarMaster(); 
+        } 
+    }
+
+    async function registrarBarbeiro() {
+        const n = document.getElementById('regNome').value; const e = document.getElementById('regEmail').value; const s = document.getElementById('regSenha').value;
+        const d = new Date(); d.setDate(d.getDate() + 30);
+        await sb.from('perfil_barbeiro').insert([{ nome_salao: n, email: e, senha: s, status_pagamento: 'Ativo', data_expiracao: d.toISOString() }]);
+        alert("Conta criada! Você tem 30 dias grátis."); trocarTela('pAuth');
+    }
+
+    function carregarDadosDash() { const fat = parseFloat(localStorage.getItem('faturamento_barber') || 0); const cortes = parseInt(localStorage.getItem('cortes_hoje') || 0); document.getElementById('valFaturamento').innerText = "R$ " + fat.toFixed(2); document.getElementById('valTicket').innerText = "R$ " + (cortes > 0 ? (fat / cortes).toFixed(2) : "0.00"); }
+    function zerarMes() { if(confirm("Zerar mês?")) { localStorage.setItem('faturamento_barber', 0); localStorage.setItem('cortes_hoje', 0); carregarDadosDash(); } }
+    function trocarTela(id) { document.querySelectorAll('.page').forEach(p => p.classList.remove('active')); document.getElementById(id).classList.add('active'); window.scrollTo(0,0); }
+    function copiarLink() { navigator.clipboard.writeText(document.getElementById('meuLink').innerText); alert("Copiado!"); }
+    function sair() { window.location.search = ""; window.location.reload(); }
+    
+    async function addServico() { await sb.from('servicos').insert([{ nome: document.getElementById('sNome').value, preco: document.getElementById('sPreco').value, barbeiro_id: logado_id }]); carregarServicos(); }
+    
+    async function carregarServicos() { 
+        const { data } = await sb.from('servicos').select('*').eq('barbeiro_id', logado_id); 
+        if(data) document.getElementById('listaServicosBarbeiro').innerHTML = data.map(s => `
+            <div style="display:flex; justify-content:space-between; padding:8px; border-bottom:1px solid #222; align-items:center;">
+                <span>${esc(s.nome)} - <b>R$ ${esc(s.preco)}</b></span>
+                <span style="color:var(--red); cursor:pointer; font-weight:bold; padding:5px;" onclick="excluirServico('${s.id}')">✕</span>
+            </div>`).join(''); 
+    }
+
+    async function excluirServico(id) {
+        if(confirm("Excluir este serviço?")) {
+            await sb.from('servicos').delete().eq('id', id);
+            carregarServicos();
+        }
+    }
+
+    async function carregarServicosParaCliente() { 
+        const { data } = await sb.from('servicos').select('*').eq('barbeiro_id', barbeiro_alvo_id); 
+        if(data) document.getElementById('listaServicosMultiplos').innerHTML = data.map(s => `<div style="display:flex; align-items:center; padding:12px; border-bottom:1px solid #222;"><input type="checkbox" name="servicoCheck" value="${s.nome}" data-preco="${s.preco}" onchange="atualizarSoma()" style="width:22px; height:22px; margin-right:15px;"><label>${esc(s.nome)} - R$ ${esc(s.preco)}</label></div>`).join(''); 
+    }
+    
+    function atualizarSoma() { 
+        let t = 0; 
+        document.querySelectorAll('input[name="servicoCheck"]:checked').forEach(i => t += parseFloat(i.getAttribute('data-preco') || 0)); 
+        document.querySelectorAll('.vitrine-item.selected').forEach(i => t += parseFloat(i.getAttribute('data-preco') || 0));
+        document.getElementById('valorTotalCliente').innerText = t.toFixed(2); 
+    }
+    
+    async function confirmarAgendamento() { 
+        const n = document.getElementById('cNome').value; 
+        const z = document.getElementById('cZap').value; 
+        const d = document.getElementById('dataHoraAgendamento').value; 
+        const v = document.getElementById('valorTotalCliente').innerText; 
+        const marcados = document.querySelectorAll('input[name="servicoCheck"]:checked'); 
+        let s = []; 
+        marcados.forEach(c => s.push(c.value)); 
+        document.querySelectorAll('.vitrine-item.selected').forEach(c => s.push(c.getAttribute('data-nome')));
+        
         if(!n || !d || s.length === 0) return alert("Preencha tudo!"); 
-        await addDoc(collection(db, 'agendamentos'), { cliente_nome: n, cliente_zap: z, data_hora: d, barbeiro_id: barbeiro_alvo_id, comentario_cliente: `R$ ${v} (${s.join(", ")})` }); 
+        await sb.from('agendamentos').insert([{ cliente_nome: n, cliente_zap: z, data_hora: d, barbeiro_id: barbeiro_alvo_id, comentario_cliente: `R$ ${v} (${s.join(", ")})` }]); 
         alert("Horário Reservado!"); location.reload(); 
     }
-
-    window.carregarAgendamentos = async function() { 
-        // Correção aplicada aqui: tiramos o orderBy da consulta direta para evitar erro de índice no Firebase
-        const q = query(collection(db, 'agendamentos'), where('barbeiro_id', '==', logado_id));
-        const qs = await getDocs(q);
-        const data = qs.docs.map(d => ({id: d.id, ...d.data()}));
-        
-        // Ordenamos por data_hora usando JavaScript local!
-        data.sort((a, b) => (a.data_hora || '').localeCompare(b.data_hora || ''));
-
+    
+    async function carregarAgendamentos() { 
+        const { data } = await sb.from('agendamentos').select('*').eq('barbeiro_id', logado_id).order('data_hora', { ascending: true }); 
         const list = document.getElementById('listaAgendamentos'); 
-        
         if(data && data.length > 0) { 
             let html = ''; 
             for (const a of data) { 
-                const qFid = query(collection(db, 'fidelidade_clientes'), where('cliente_zap', '==', a.cliente_zap));
-                const qsFid = await getDocs(qFid);
-                let f = null;
-                if(!qsFid.empty) f = qsFid.docs[0].data();
-
-                html += `<div class="card" style="border-left: 5px solid var(--gold);">${f ? `<span class="fidelidade-badge">💎 CLIENTE FIEL (${f.total_cortes}x)</span>` : ''}<br><b>${a.cliente_nome}</b><br><small>⏰ ${new Date(a.data_hora).toLocaleString()}</small><div style="display:flex; gap:10px; margin-top:15px;"><button class="btn btn-green" style="padding:10px; font-size:10px;" onclick="finalizarAgendamento('${a.id}','${a.comentario_cliente}','${a.cliente_zap}','${a.cliente_nome}')">CONCLUIR</button><button class="btn" style="background:#25d366; color:white; padding:10px; font-size:10px;" onclick="avisarNoZap('${a.cliente_zap}','${a.cliente_nome}','${a.comentario_cliente}','${a.data_hora}')">WHATSAPP</button></div></div>`; 
+                const { data: f } = await sb.from('fidelidade_clientes').select('total_cortes').eq('cliente_zap', a.cliente_zap).maybeSingle(); 
+                html += `<div class="card" style="border-left: 5px solid var(--gold);">${f ? `<span class="fidelidade-badge">💎 CLIENTE FIEL (${f.total_cortes}x)</span>` : ''}<br><b>${esc(a.cliente_nome)}</b><br><small>⏰ ${new Date(a.data_hora).toLocaleString()}</small><br><small style="color:var(--green); font-weight:bold;">${esc(a.comentario_cliente)}</small><div style="display:flex; gap:10px; margin-top:15px;"><button class="btn btn-green" style="padding:10px; font-size:10px;" onclick="finalizarAgendamento('${a.id}','${a.comentario_cliente}','${a.cliente_zap}','${a.cliente_nome}')">CONCLUIR</button><button class="btn" style="background:#25d366; color:white; padding:10px; font-size:10px;" onclick="avisarNoZap('${a.cliente_zap}','${a.cliente_nome}','${a.comentario_cliente}','${a.data_hora}')">WHATSAPP</button></div></div>`; 
             } 
             list.innerHTML = html; 
         } else { 
@@ -354,26 +407,22 @@
         } 
     }
     
-    window.avisarNoZap = function(tel, nome, servico, data) { const msg = `*CONFIRMAÇÃO*\n\nOlá *${nome}*! Seu horário para *${servico}* está confirmado.\n\n📅 Data: ${new Date(data).toLocaleString()}`; window.open("https://wa.me/55" + tel.replace(/\D/g, '') + "?text=" + encodeURIComponent(msg)); }
+    function avisarNoZap(tel, nome, servico, data) { const msg = `*CONFIRMAÇÃO*\n\nOlá *${nome}*! Seu horário para *${servico}* está confirmado.\n\n📅 Data: ${new Date(data).toLocaleString()}`; window.open("https://wa.me/55" + tel.replace(/\D/g, '') + "?text=" + encodeURIComponent(msg)); }
 
-    window.finalizarAgendamento = async function(id, precoStr, zap, nome) { 
+    async function finalizarAgendamento(id, precoStr, zap, nome) { 
         if(confirm("Finalizar atendimento?")) { 
             const v = parseFloat(precoStr.split('R$ ')[1]) || 0; 
             localStorage.setItem('faturamento_barber', parseFloat(localStorage.getItem('faturamento_barber') || 0) + v); 
             localStorage.setItem('cortes_hoje', parseInt(localStorage.getItem('cortes_hoje') || 0) + 1); 
-            window.carregarDadosDash(); 
-            
-            const qFid = query(collection(db, 'fidelidade_clientes'), where('barbeiro_id', '==', logado_id), where('cliente_zap', '==', zap));
-            const qsFid = await getDocs(qFid);
-             
-            if(!qsFid.empty) { 
-                const fidDoc = qsFid.docs[0];
-                await updateDoc(doc(db, 'fidelidade_clientes', fidDoc.id), { total_cortes: fidDoc.data().total_cortes + 1 }); 
+            carregarDadosDash(); 
+            const { data: fid } = await sb.from('fidelidade_clientes').select('*').eq('barbeiro_id', logado_id).eq('cliente_zap', zap).maybeSingle(); 
+            if(fid) { 
+                await sb.from('fidelidade_clientes').update({ total_cortes: fid.total_cortes + 1 }).eq('id', fid.id); 
             } else { 
-                await addDoc(collection(db, 'fidelidade_clientes'), { barbeiro_id: logado_id, cliente_zap: zap, total_cortes: 1, cliente_nome: nome }); 
+                await sb.from('fidelidade_clientes').insert([{ barbeiro_id: logado_id, cliente_zap: zap, total_cortes: 1, cliente_nome: nome }]); 
             } 
-            await deleteDoc(doc(db, 'agendamentos', id)); 
-            window.carregarAgendamentos(); 
+            await sb.from('agendamentos').delete().eq('id', id); 
+            carregarAgendamentos(); 
         } 
     }
 </script>
