@@ -191,7 +191,7 @@
                 document.getElementById('nomeBarbeariaAgendar').innerText = data.nome_salao;
                 trocarTela('pAgendar'); 
                 carregarServicosParaCliente();
-                carregarVitrineParaCliente(); // ATIVAÇÃO DA VITRINE: Busca as fotos assim que a página abre!
+                carregarVitrineParaCliente(); 
             } else {
                 document.body.innerHTML = "<div style='color:white; text-align:center; padding-top:100px; padding-left:20px; padding-right:20px;'><h3>SISTEMA SUSPENSO</h3><p>Este estabelecimento está temporariamente inativo por falta de pagamento.</p></div>";
             }
@@ -211,7 +211,7 @@
                 document.body.innerHTML = `
                     <div style="background:#000; min-height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center; padding:30px; text-align:center; font-family:sans-serif;">
                         <h1 style="color:#ff4d4d; font-size:32px;">SEU ACESSO ACABOU</h1>
-                        <p style="color:#888; font-size:18px; margin:20px 0;">Para continuar acessando o seu painel e recebendo agendamentos, realize o pagamento da sua mensalidade.</p>
+                        <p style="color:#888; font-size:18px; margin:20px 0;">Para continuing acessando o seu painel e recebendo agendamentos, realize o pagamento da sua mensalidade.</p>
                         <button onclick="window.location.href='https://wa.me/5579991073108?text=Ola! Meus 30 dias acabaram, quero renovar meu acesso ao BarberSaaS'" 
                         style="background:#25d366; color:white; border:none; padding:20px 30px; border-radius:15px; font-weight:bold; cursor:pointer; font-size:16px;">
                             PAGAR E LIBERAR ACESSO 📱
@@ -229,7 +229,7 @@
         } else { alert("E-mail ou senha incorretos!"); }
     }
 
-    /* FUNÇÕES DA VITRINE (CONTROLE DO BANCO DE DADOS) */
+    /* FUNÇÕES DA VITRINE */
     async function addVitrine() {
         const fileInput = document.getElementById('vFoto');
         const nome = document.getElementById('vNome').value;
@@ -293,7 +293,6 @@
         elemento.classList.toggle('selected');
         atualizarSoma();
     }
-    /* FIM DO MÓDULO VITRINE */
 
     async function carregarMaster() {
         const { data } = await sb.from('perfil_barbeiro').select('*').neq('email', atob(_0x5a3));
@@ -359,7 +358,7 @@
     function atualizarSoma() { 
         let t = 0; 
         document.querySelectorAll('input[name="servicoCheck"]:checked').forEach(i => t += parseFloat(i.getAttribute('data-preco') || 0)); 
-        document.querySelectorAll('.vitrine-item.selected').forEach(i => t += parseFloat(i.getAttribute('data-preco') || 0)); // Soma os itens da vitrine selecionados
+        document.querySelectorAll('.vitrine-item.selected').forEach(i => t += parseFloat(i.getAttribute('data-preco') || 0)); 
         document.getElementById('valorTotalCliente').innerText = t.toFixed(2); 
     }
     
@@ -371,7 +370,7 @@
         const marcados = document.querySelectorAll('input[name="servicoCheck"]:checked'); 
         let s = []; 
         marcados.forEach(c => s.push(c.value)); 
-        document.querySelectorAll('.vitrine-item.selected').forEach(c => s.push(c.getAttribute('data-nome'))); // Adiciona os cortes da vitrine ao agendamento
+        document.querySelectorAll('.vitrine-item.selected').forEach(c => s.push(c.getAttribute('data-nome'))); 
         
         if(!n || !d || s.length === 0) return alert("Preencha tudo!"); 
         await sb.from('agendamentos').insert([{ cliente_nome: n, cliente_zap: z, data_hora: d, barbeiro_id: barbeiro_alvo_id, comentario_cliente: `R$ ${v} (${s.join(", ")})` }]); 
@@ -385,7 +384,7 @@
     async function finalizarAgendamento(id, precoStr, zap, nome) { 
         if(confirm("Finalizar atendimento?")) { 
             const v = parseFloat(precoStr.split('R$ ')[1]) || 0; 
-            localStorage.setItem('faturamento_barber', parseFloat(localStorage.getItem('faturamento_barber'] || 0) + v); 
+            localStorage.setItem('faturamento_barber', parseFloat(localStorage.getItem('faturamento_barber') || 0) + v); 
             localStorage.setItem('cortes_hoje', parseInt(localStorage.getItem('cortes_hoje') || 0) + 1); 
             carregarDadosDash(); 
             const { data: fid } = await sb.from('fidelidade_clientes').select('*').eq('barbeiro_id', logado_id).eq('cliente_zap', zap).maybeSingle(); 
